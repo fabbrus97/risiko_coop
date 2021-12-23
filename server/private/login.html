@@ -1,0 +1,26 @@
+<html>
+    <head>
+        <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+        
+    </head>
+    <body>
+        <label>Inserisci la password per la lobby: </label>
+        <input type="password" name="password" id="pwd">
+    </body>
+    <script type="text/javascript">
+        let pwd = $("#pwd").val
+        let urlParams = new URLSearchParams(window.location.search);
+        data = {"name": urlParams.get("id"), "pwd": pwd}
+        $.post("localhost:3000/lobby", data, (data, textStatus, jqXHR ) => {
+            if (textStatus == "ok"){
+                //TODO go to the lobby
+                sessionStorage.setItem("risikolobby", data)
+            } else {
+                location.reload();
+            }
+        });
+        
+    </script>
+</html>
