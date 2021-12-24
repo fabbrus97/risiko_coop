@@ -17,13 +17,13 @@ var lobbylist = []
 
 /** socket.io code **/
 io.on('connection', (socket) => { 
-  console.log('a user connected');
+  console.log(`User ${socket.id} connected`);
   //TODO controlla i timestamp delle lobby, cancella quelle che hanno superato il keep_alive
 
   socket.emit("lobbylist", lobbylist)
 
   socket.on('disconnect', () => {
-    console.log("User disconnected")
+    console.log(`User ${socket.id} disconnected`)
   });
 
   socket.on("newlobby", (lobby) => {
@@ -53,9 +53,13 @@ io.on('connection', (socket) => {
   })
 
   socket.on("joingroup", (details) => {
+
+    console.log(`User ${socket.id} joining room ${details["name"]}`)
+
     let name = details["name"]
     let password = details["password"]
 
+    console.log(`Cheking lobby pwd ${password_timestamp[name]["password"]} with user pwd ${password}: ${password_timestamp[name]["password"] == password}`)
     if (password_timestamp[name] != null && password_timestamp[name]["password"] == password){
       socket.join(name);
       io.sockets.in(name).emit("userjoined");
@@ -78,7 +82,7 @@ io.on('connection', (socket) => {
 
 /** express server code **/
 
-app.use(express.static('public'));
+app.use(express.static('static'));
 
 app.get('/newlobby', function(req, res){
   console.log(req.params)
@@ -88,20 +92,20 @@ app.get('/lobby', function(req, res){
     //lobby?name=mialobby
     let name = req.query["name"]
     if (password_timestamp[name] != null){
-      console.log("qualcuno ha richiesto una lobby")
+      
       if (password_timestamp[name]["password"] == ""){ //lobby aperta
-        console.log("Buone notizie ciurmaglia! la lobby è aperta")
-        res.sendFile(__dirname + "/private/lobby.html")
+      
+        res.sendFile(__dirname + "/static/lobby.html")
         return;
       } else {
-        console.error("Password richiesta per la lobby")
-        res.sendFile(__dirname + "/private/login.html")
+      
+        res.sendFile(__dirname + "/static/login.html")
         return;
       }
-    } else {
-      console.error("La lobby non esiste")
-      //TODO
-      res.sendFile(__dirname + "/private/404.html")
+    } else if (name != null){
+      
+      res.sendFile(__dirname + "/static/404.html")
+      return;
     }
 
     console.log("Serving lobby")
