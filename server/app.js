@@ -62,20 +62,26 @@ io.on('connection', (socket) => {
     console.log(`Cheking lobby pwd ${password_timestamp[name]["password"]} with user pwd ${password}: ${password_timestamp[name]["password"] == password}`)
     if (password_timestamp[name] != null && password_timestamp[name]["password"] == password){
       socket.join(name);
-      io.sockets.in(name).emit("userjoined");
+      io.sockets.in(name).emit("user_joined", socket.id);
     }
   })
 
   socket.on("offer", (data) => {
-    socket.rooms.forEach(room => {
-      io.sockets.in(room).emit("session_desc", data);
-    })
+    // socket.rooms.forEach(room => {
+    //   const r = {"data": data, "id": socket.id}
+    //   io.sockets.in(room).emit("session_desc", r);
+    // })
+    const r = {"data": data["offer"], "id": socket.id}
+    io.to(data["to"]).emit("session_desc", r)
   })
 
   socket.on("answer", (data) => {
-    socket.rooms.forEach(room => {
-      io.sockets.in(room).emit("reply", data);
-    })
+    // const r = {"data": data, "id": socket.id}
+    // socket.rooms.forEach(room => {
+    //   io.sockets.in(room).emit("reply", r);
+    // })
+    const r = {"data": data["answer"], "id": socket.id}
+    io.to(data["to"]).emit("reply", r)
   })
 
 });
