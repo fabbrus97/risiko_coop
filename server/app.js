@@ -71,7 +71,7 @@ io.on('connection', (socket) => {
     //   const r = {"data": data, "id": socket.id}
     //   io.sockets.in(room).emit("session_desc", r);
     // })
-    const r = {"data": data["offer"], "id": socket.id}
+    const r = {"data": data["offer"], "id": socket.id, "player": data["player"]} 
     io.to(data["to"]).emit("session_desc", r)
   })
 
@@ -80,7 +80,7 @@ io.on('connection', (socket) => {
     // socket.rooms.forEach(room => {
     //   io.sockets.in(room).emit("reply", r);
     // })
-    const r = {"data": data["answer"], "id": socket.id}
+    const r = {"data": data["answer"], "id": socket.id, "player": data["player"]}
     io.to(data["to"]).emit("reply", r)
   })
 
