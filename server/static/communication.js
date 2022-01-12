@@ -9,17 +9,27 @@ class Communication{
         this.turno = 1
         this.players_in_lobby = players
         this.peerconnections = []
+        
     }
 
-    //tutti i messaggi devono avere un campo 'command' che specifica cosa fare, il resto del formato del messaggio
-    //dipende da comman
-    receivedMessage(msg){
-        window.gs.Action(msg)
+    //tutti i messaggi devono avere un campo 'command' che specifica cosa fare e 'turno' (il
+    //turno del giocatore che ha mandato il messaggio), il resto del formato del messaggio
+    //dipende da command
+    static receivedMessage(msg){
+        
+        msg = JSON.parse(msg)
+        window.gs.action(msg)
     }
 
     sendMessage(msg){
-        for (i in this.peerconnections){
-            this.peerconnections[i].channel.send(msg)
+        
+        for (let i in this.peerconnections){
+            var tries = 10000;
+            while (this.peerconnections[i].channel.readyState != "open" && tries > 0){
+                tries = tries - 1;
+            }
+            if (tries > 0)
+                this.peerconnections[i].channel.send(JSON.stringify(msg))
         }
     }
 
@@ -37,9 +47,16 @@ class Communication{
         }
 
         const sendChannel = localConnection.createDataChannel("sendChannel");
-        sendChannel.onmessage =e =>  Communication.receivedMessage(e.data)
-        sendChannel.onopen = e => console.log("open!!!!");
-        sendChannel.onclose =e => console.log("closed!!!!!!");
+        sendChannel.onmessage = e =>  {
+            Communication.receivedMessage(e.data)
+        }
+        sendChannel.onopen    = e => {
+            console.log("open!!!!");
+            if (this.peerconnections.length + 1 == players_in_lobby){
+                window.gs.me().start_playing();
+            }
+        }
+        sendChannel.onclose   = e => console.log("closed!!!!!!");
 
         localConnection.channel = sendChannel
 
@@ -68,9 +85,7 @@ class Communication{
         }
 
         console.log(`Ho ricevuto un'offerta da ${offer_id["id"]}, creo una connessione con la sua offerta e gli mando una risposta`)
-        this.turno += 1
-        window.gs.me().turno = this.turno
-        
+
         const remoteConnection = new RTCPeerConnection()
         remoteConnection.remotePeer = offer_id["id"]
         let player_data = offer_id["player"]
@@ -80,14 +95,19 @@ class Communication{
         var player = new Player(player_data.turno, player_data.colore, window.gs.me().tanks, true)
         window.gs.addPlayer(player)
 
-        remoteConnection.onicecandidate = e =>  {
+        /*remoteConnection.onicecandidate = e =>  {
             console.log(" NEW ice candidnat!! on localconnection reprinting SDP " )
-        }
+        }*/
 
         remoteConnection.ondatachannel= (e) => {
             const receiveChannel = e.channel;
-            receiveChannel.onmessage = e =>  Communication.receivedMessage(e.data)
+            receiveChannel.onmessage = e =>  {
+                Communication.receivedMessage(e.data)
+            }
             receiveChannel.onopen = (e) => {
+                this.turno += 1
+                window.gs.me().turno = this.turno
+        
                 console.log("open!!!! Cleaning up...");
 
                 let i = 0;
@@ -134,10 +154,6 @@ class Communication{
 
                 var player = new Player(player_data.turno, player_data.colore, window.gs.me().tanks, true)
                 window.gs.addPlayer(player)
-
-                if (this.peerconnections.length == players_in_lobby){
-                    window.gs.me().start_playing();
-                }
 
             }
         });

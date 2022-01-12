@@ -3,6 +3,7 @@
         <link rel="stylesheet" href="lobby.css">
 
         <script src="https://cdn.socket.io/4.4.0/socket.io.min.js" integrity="sha384-1fOn6VtTq3PWwfsOrk45LnYcGosJwzMHv+Xh/Jx5303FVOXzEnw0EpLv30mtjmlj" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
 
     </head>
     <body>
@@ -51,11 +52,7 @@
             <div class="nation" id="siam" style="top: 67%; left: 75%;"> <span class="nation-name"> siam </span> </div>
 
             <!-- sud america -->
-            <div class="nation" id="venezuela" style="top: 70%; left: 7%;"> 
-                <span class="nation-name"> venezuela </span> 
-                <div class="carri"></div>
-            </div>
-
+            <div class="nation" id="venezuela" style="top: 70%; left: 7%;"> <span class="nation-name"> venezuela </span> </div>
             <div class="nation" id="brasile" style="top: 81%; left: 15%;"> <span class="nation-name"> brasile </span> </div>
             <div class="nation" id="peru" style="top: 90%; left: 9%;"> <span class="nation-name"> peru </span> </div>
             <div class="nation" id="argentina" style="top: 103%; left: 9%;"> <span class="nation-name"> argentina </span> </div>
@@ -76,6 +73,19 @@
             <div class="nation" id="australia_or" style="top: 112%; right: 9%;"> <span class="nation-name"> australia or. </span> </div>
 
 
+
+        </div>
+
+        <div id="dashboard">
+            <span id="tank_counter_dashboard"></span>
+            <span id="cards_dashboard"></span>
+            <span id="obj_dashboard"></span>
+            <span id="attack_dices"></span>
+            <span id="defense_dices"></span>
+            <span id="next">
+                <button id="next-btn" onclick="next()">Passa il turno</button>
+            </span>
+            <!-- TODO -->
 
         </div>
     </body>

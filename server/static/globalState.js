@@ -39,6 +39,7 @@ class Player {
         this.enemy = enemy;
 
         this.countries = {}
+        this.ps = new PrivateState();
     }
 
     setCountries( countries ){ //gli stati che ha un giocatore e il numero di carri
@@ -52,6 +53,7 @@ class Player {
 
     addCountry( country){
         this.countries[country] = 1
+        this.tanks -= 1
     }
 
     /**
@@ -61,6 +63,7 @@ class Player {
      */
      addTanks(country, tanks){ //numero dei carri armati in una zona
         this.countries[country] += tanks
+        this.tanks -= tanks
     }
 
     /**
@@ -68,47 +71,104 @@ class Player {
      * @param {string} country 
      * @param {int} tanks 
      */
-    removeTanks(country, tanks){
+    removeTanks(country, tanks, increaseCounter){
+        //se togliamo carri, potrebbe essere perché li abbiamo persi o stiamo facendo uno spostamento
+        //e in quel caso this.tanks va decrementato
+        //oppure li stiamo posizionando e in quel caso this.tanks va ri-aumentato (magari abbiamo cambiato
+        //idea sul numero di carri armati in una regione)
         this.countries[country] -= tanks
+        if (increaseCounter)
+            this.tanks += tanks
+        else
+            this.tanks -= tanks
+        if (this.countries[country] == 0){
+            //remove country
+            delete this.countries[country]
+        }
+    }
 
+    getTanks(){
+        return this.tanks
     }
     
     //TODO questa funzione non è chiamata se il primo giocatore droppa la connessione all'inizio, controlla
-    start_playing(){
+    start_playing(_cards){
         
-        console.log("DEBUG inizio a giocare, il mio turno è " + this.turno)
+        console.log("DEBUG inizio a giocare")
 
-        let available_cards = cards.countries.copyWithin(0, cards.countries.length)
-        let draw_id = parseInt(Math.random()*100%available_cards.length)
-        let card = available_cards[card_id]
-        available_cards.splice(card_id, 1)
-        this.countries[card.nome] = 1
-        let message = {"command": "draw", "cards": available_cards, "turno": turno}
+        //tutti hanno pescato un obiettivo, è di nuovo il mio turno
+        // si può cominciare a distribuire i territori
+        console.log("Il mio obiettivo è ")
+        console.log(this.ps.getObjective())
+        if (this.turno == 1 && this.ps.getObjective() != null){
+            console.log("Tutti hanno un obiettivo, iniziamo a pescare gli stati")
+            //questa funzione pesca una carta e dice agli altri giocatori di pescare
+            this.set_countries(cards.countries.copyWithin(0, cards.countries.length))
+            return;
+        }
+
+        //se sono il giocatore 1, cards è null perché sono io il mazziere
+        //ovvero prendo le carte, pesco un obiettivo e passo
+        if (this.turno != 1 && _cards == null){
+            console.log("Attendo il giocatore 1...")
+            return
+        }
+
+
+
+        //se sono il giocatore > 1 mi vengono passate le carte rimanenti
+        //quindi pesco e passo
+        let available_cards_obj = {};
+        if (_cards == null){
+            available_cards_obj = cards.objectives.copyWithin(0, cards.objectives.length)
+            console.log("GIOCATORE 1 sto per pescare obiettivo da tutte le carte obiettivo:")
+            let c = this.draw_card(available_cards_obj)
+            this.ps.setObjective(c)
+            console.log("Ho pescato e settato l'obiettivo")
+            console.log(c)
+        } else {
+            console.log("GIOCATORE > 1 sto per pescare obiettivo")
+            
+            let c = this.draw_card(_cards)
+            this.ps.setObjective(c)
+            console.log("Ho pescato e settato l'obiettivo")
+            console.log(c)
+            available_cards_obj = _cards
+            console.log("Carte rimanenti: ")
+            console.log(available_cards_obj)
+        }
+
+        let message = {"command": "draw_obj", "cards": available_cards_obj, "turno": this.turno}
         
-        console.log("DEBUG Ho pescato la prima carta, passo")
+        // console.log("DEBUG Ho pescato la prima carta, passo")
 
-        Communication.sendMessage(message)
+        window.comm.sendMessage(message)
         
     }
 
-    draw_card(cards){
-
+    draw_card(_cards){
+        let draw_id = parseInt(Math.random()*100%_cards.length)
+        let card = _cards[draw_id]
+        _cards.splice(draw_id, 1)
+        return card;
+    }
+    
+    set_countries(_cards){
         console.log("DEBUG Ho pescato una carta, sono il giocatore " + this.turno)
-
-        let draw_id = parseInt(Math.random()*100%cards.length)
-        let card = cards[card_id]
-        cards.splice(card_id, 1)
-        this.countries[card.nome] = 1
+        let card = this.draw_card(_cards)
+        if (card.nome != "bonus")
+        this.addCountry(card.nome)    
         let message = {};
-        if (cards.length > 0){
-            message = {"command": "draw", "cards": cards, "turno": turno}
-            console.log("DEBUG passo")
+        if (_cards.length > 0){
+            message = {"command": "draw_country", "cards": _cards, "turno": this.turno}
+            
         } else {
             console.log("DEBUG carte finite, disporre le truppe")
             message = {"command": "start_putting_tanks"}
-            GlobalState.start_putting_tanks();
+            //TODO manda array delle nazioni
+            start_putting_tanks(Object.keys(this.countries));
         }
-        Communication.sendMessage(message)
+        window.comm.sendMessage(message)
     }
 
 
@@ -152,24 +212,46 @@ class GlobalState{
     }
 
     action(action){
-
+        console.log("Ricevuta azione: " + action.command)
+        if (action.command == "next"){
+            console.log("Vediamo lo stati degli altri  giocatori...")
+            this.players.forEach( p => {
+                if (p.turno == action.turno){
+                    p.setCountries(action.countries)
+                }
+            })
+        }
+        // console.log("DEBUG devo fare qualcosa? " + (action.turno % this.players.length) + " il mio turno è " + this.me().turno)
         if ((action.turno % this.players.length) + 1 != this.me().turno ){
+            console.log("Non è il mio turno: ha giocato " + action.turno + " e io sono " + this.me().turno)
             return
         }
         
         console.log("DEBUG Tocca a me fare qualcosa!")
         switch (action.command){
-            case "draw":
-                this.players[0].draw_card(action.cards)
+            case "draw_country":
+                this.me().set_countries(action.cards)
+                break;
+            case "draw_obj":
+                this.me().start_playing(action.cards);
+                //this.players[0].draw_card(action.cards)
                 
             break;
             case "start_putting_tanks":
-                this.start_putting_tanks()
-
+                start_putting_tanks(Object.keys(this.countries))
+            case "next":
+                your_turn();
+                break;
             default:
                 console.error("Unknown action")
             break;
         }
+    }
+
+    //funzione per passare il turno
+    next(){
+        console.log("GIOCATORE " + this.me().turno + ": passo il turno")
+        window.comm.sendMessage({"command": "next", "tanks": this.me().countries, "turno": this.me().turno})
     }
 
     /**
@@ -180,19 +262,28 @@ class GlobalState{
         this.players.push(player)
     }
 
-    start_putting_tanks(){
-        //TODO qualcosa di grafico deve succedere
-        console.log("Inizia a posizionare i carri...")
-    }
+
 }
 
 class PrivateState{
-    constructor(objective){
-        this.objective = objective
+    constructor(){
+        this.cards = []
     }
 
-    setBonusCards(cards){
-        this.cards = cards;
+    addCard(card){
+        this.cards.push(card)
+    }
+
+    removeCard(card){        
+        this.cards.splice(this.cards.findIndex(card), 1)
+    }
+
+    setObjective(obj){
+        this.objective = obj
+    }
+
+    getObjective(){
+        return this.objective
     }
 
 }

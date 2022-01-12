@@ -5,14 +5,14 @@ const socket = io()
 // }
 
 var lobby_name = "test" //TODO
-var players_in_lobby = 4 //TODO
+var players_in_lobby = 3 //TODO
 var color = "red"
 var tanks = 35 - (players_in_lobby - 3)*5 //regola per calcolare il numero di carri per giocatore - in 3 35, in 4 30, etc.
 socket.emit("joingroup", {"name": lobby_name, "password": ""})
 
 var me = new Player(1, color, tanks, false);
 var gs = new GlobalState(me); window.gs = gs;
-var comm = new Communication(players_in_lobby, socket);
+var comm = new Communication(players_in_lobby, socket); window.comm = comm;
 
 /* console.log("Sto per fare un'offerta per webrtc perché sono appena entrato in una room")
 make_offer(); */
@@ -43,11 +43,10 @@ socket.on("reply", (answer_id) => {
     } else {
         console.log(`Ho ricevuto una risposta da ${answer_id["id"]} ad una mia offerta`)
         //prendi una connessione da myconnections
-        //reply(answer_id)
+        comm.reply(answer_id)
+
     }
 })
-
-
 
 
 
