@@ -24,7 +24,8 @@ function update_table(data){
         if (e["password"]){
             sicurezza = "<span style='color:red'> <b> password </b> </span>"
         }
-        tabella.append(`<tr id="${e["id"]}"><td> ${e["name"]} </td><td> ${e["numero_giocatori"]} </td><td> ${e["giocatori_massimi"]} </td><td> ${sicurezza} </td></tr>`)
+        tabella.append(`<tr id="${e["id"]}"><td> ${e["name"]} </td><td> ${e["numero_giocatori"]} </td><td> ${e["giocatori_massimi"]} </td><td> ${sicurezza} </td>
+                        <td><a href="#" onclick="joinLobby(event, ${sicurezza == "aperta"}, '${e["name"]}', ${e["giocatori_massimi"]} )"> entra </a></td></tr>`)
     });
     
 }
@@ -44,3 +45,16 @@ $("#newlobby").submit(function(e){
     socket.emit("newlobby", {"name": e.target[0].value, "maxplayer": e.target[1].value, "password": e.target[2].value})
     return false;
 });
+
+function joinLobby(e, no_security, nome, giocatori){
+    e.preventDefault()
+    if (localStorage.getItem(nome)){
+        window.location = "/lobby?name="+nome
+    }
+    
+    localStorage.setItem(nome, JSON.stringify({"n_giocatori": giocatori, "password": !no_security}))
+    if(no_security)
+        window.location = "/lobby?name="+nome
+    else
+        window.location = "/html/login.html?name=" + nome
+}

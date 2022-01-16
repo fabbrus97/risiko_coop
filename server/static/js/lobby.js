@@ -4,13 +4,16 @@ const socket = io()
 //     "iceServers": [{"urls": "stun:stun.l.google.com:19302"}]
 // }
 
-var lobby_name = "test" //TODO
-var players_in_lobby = 3 //TODO
-var color = "red"
+
+var pars = new URLSearchParams(document.location.search)
+var lobby_name = pars.get("name")
+var players_in_lobby = JSON.parse(localStorage.getItem(lobby_name)).n_giocatori
+// var color = ""
 var tanks = 35 - (players_in_lobby - 3)*5 //regola per calcolare il numero di carri per giocatore - in 3 35, in 4 30, etc.
+
 socket.emit("joingroup", {"name": lobby_name, "password": ""})
 
-var me = new Player(1, color, tanks, false);
+var me = new Player(1, "", tanks, false);
 var gs = new GlobalState(me); window.gs = gs;
 var comm = new Communication(players_in_lobby, socket); window.comm = comm;
 

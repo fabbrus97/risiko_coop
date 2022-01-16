@@ -42,7 +42,8 @@ class Communication{
         localConnection.onicecandidate = e =>  {
             console.log(" NEW ice candidnat!! on localconnection reprinting SDP " )
             let player = window.gs.me() //contiene turno e colore
-            player = {"colore": player.getColor(), "turno": this.turno}
+            
+            player = {/*"colore": player.getColor(),*/ "turno": this.turno, "id": this.socket.id}
             socket.emit("offer", {"offer": localConnection.localDescription, "to": id, "player": player})
         }
 
@@ -52,6 +53,15 @@ class Communication{
         }
         sendChannel.onopen    = e => {
             console.log("open!!!!");
+
+            let len = this.peerconnections.length
+                // this.peerconnections[len - 1].turno = len + 1
+
+            this.peerconnections[len-1].turno = len + 1 //turno di quello che è appena entrato nel canale
+            // var player = new Player(player_data.turno, "", window.gs.me().tanks, true)
+            var player = new Player(len+1, "", window.gs.me().tanks, true)
+            window.gs.addPlayer(player)
+
             if (this.peerconnections.length + 1 == players_in_lobby){
                 window.gs.me().start_playing();
             }
@@ -63,8 +73,6 @@ class Communication{
         localConnection.createOffer().then(o => {
             localConnection.setLocalDescription(o).then( o => {
                 this.peerconnections.push(localConnection)
-                //console.log(localConnection.localDescription)
-                // socket.emit("offer", localConnection.localDescription)
             })
             
         })        
@@ -92,8 +100,6 @@ class Communication{
         remoteConnection.turno = player_data.turno 
         //global state e communicator devono sapere entrambi qual è il turno di ogni giocatore
         //per identificarli sia dal colore (gs) sia dal socket (comm)
-        var player = new Player(player_data.turno, player_data.colore, window.gs.me().tanks, true)
-        window.gs.addPlayer(player)
 
         /*remoteConnection.onicecandidate = e =>  {
             console.log(" NEW ice candidnat!! on localconnection reprinting SDP " )
@@ -105,10 +111,12 @@ class Communication{
                 Communication.receivedMessage(e.data)
             }
             receiveChannel.onopen = (e) => {
+
                 this.turno += 1
                 window.gs.me().turno = this.turno
-        
+
                 console.log("open!!!! Cleaning up...");
+                console.log(e)
 
                 let i = 0;
                 while (true){
@@ -121,6 +129,10 @@ class Communication{
                     if (i == this.peerconnections.length)
                         break
                 }
+                
+                var player = new Player(remoteConnection.turno, "", window.gs.me().tanks, true)
+                window.gs.addPlayer(player)
+                
             
             }
             receiveChannel.onclose =e => console.log("closed!!!!!!");
@@ -133,9 +145,10 @@ class Communication{
             await remoteConnection.createAnswer().then( a => 
                 remoteConnection.setLocalDescription(a)).then( a => {
                     this.peerconnections.push(remoteConnection)
-                    var player = {"colore": window.gs.me().colore, "turno": this.turno}
+                    
+                    var player = { /* "colore": window.gs.me().colore, */ "turno": socket.id}
+                    // var player = { /* "colore": window.gs.me().colore, */ "turno": this.turno}
                     socket.emit("answer", {"answer": remoteConnection.localDescription, "to": offer_id["id"], "player": player})
-                    // console.log(remoteConnection.localDescription)
             })
         })
     }
@@ -145,16 +158,12 @@ class Communication{
         this.peerconnections.forEach(conn => {
             if (conn.remoteDescription == null && answer_id["id"] == conn.remotePeer){
                 
-                // conn.setRemoteDescription(new RTCSessionDescription(data));
                 conn.setRemoteDescription(data);
                 console.log("Pronto per comunicare")
             
                 var player_data = answer_id["player"]
-                conn.turno = player_data.turno
-
-                var player = new Player(player_data.turno, player_data.colore, window.gs.me().tanks, true)
-                window.gs.addPlayer(player)
-
+                // conn.turno = player_data.turno
+                
             }
         });
     }

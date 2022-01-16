@@ -12,11 +12,13 @@
     <script type="text/javascript">
         let pwd = $("#pwd").val
         let urlParams = new URLSearchParams(window.location.search);
-        data = {"name": urlParams.get("id"), "pwd": pwd}
-        $.post("localhost:3000/lobby", data, (data, textStatus, jqXHR ) => {
+        data = {"name": urlParams.get("name"), "pwd": pwd}
+        $.post("/lobby", data, (data, textStatus, jqXHR ) => {
             if (textStatus == "ok"){
-                //TODO go to the lobby
-                sessionStorage.setItem("risikolobby", data)
+                var game = localStorage.getItem(nome)
+                game["password"] = pwd
+                localStorage.setItem(nome, JSON.stringify(game))
+                window.location = "/lobby?name="+nome
             } else {
                 location.reload();
             }

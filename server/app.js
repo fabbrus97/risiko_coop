@@ -59,7 +59,7 @@ io.on('connection', (socket) => {
     let name = details["name"]
     let password = details["password"]
 
-    console.log(`Cheking lobby pwd ${password_timestamp[name]["password"]} with user pwd ${password}: ${password_timestamp[name]["password"] == password}`)
+    // console.log(`Cheking lobby pwd ${password_timestamp[name]["password"]} with user pwd ${password}: ${password_timestamp[name]["password"] == password}`)
     if (password_timestamp[name] != null && password_timestamp[name]["password"] == password){
       socket.join(name);
       io.sockets.in(name).emit("user_joined", socket.id);
@@ -101,16 +101,16 @@ app.get('/lobby', function(req, res){
       
       if (password_timestamp[name]["password"] == ""){ //lobby aperta
       
-        res.sendFile(__dirname + "/static/lobby.html")
+        res.sendFile(__dirname + "/static/html/lobby.html")
         return;
       } else {
       
-        res.sendFile(__dirname + "/static/login.html")
+        res.sendFile(__dirname + "/static/html/login.html")
         return;
       }
     } else if (name != null){
       
-      res.sendFile(__dirname + "/static/404.html")
+      res.sendFile(__dirname + "/static/html/404.html")
       return;
     }
 

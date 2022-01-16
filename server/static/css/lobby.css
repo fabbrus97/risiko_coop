@@ -7,7 +7,7 @@
     width: 96%;
     min-height: 1300px; 
 
-    background-image: url("images/map_nations.png");
+    background-image: url("../images/map_nations.png");
     background-size: 100%;
     background-repeat: no-repeat;
     border: 1px solid black;
@@ -63,28 +63,72 @@
 
 #dashboard{
     width: 100%;
-    height: 20%;
-    position: fixed;
+    height: 25%;
     bottom: 0px;
-    z-index: 2;
     border: solid;
     background-color: brown;
+    display: grid;
 }
+
+#dashboard span {
+    display: inline-grid;
+}
+
+#obj_dashboard img {
+    height: 60%;
+}
+
+
+#tank_div {
+    display: inline-grid;
+    grid-column: 1;
+}
+
 #tank_counter_dashboard{
     font-size: 20px;
     background-color: white;
 }
 
 #obj_dashboard {
-
+    grid-column: 2;
 }
 
 #cards_dashboard{
-
+    grid-column: 3;
 }
-#attack_dices{
 
+#combo_span {
+    grid-column: 4;
 }
-#defense_dices{
 
+#attack_span {
+    grid-column: 5;
+}
+
+#dices {
+    grid-column: 6;
+}
+
+#throw_span {
+    grid-column: 7;
+}
+
+#next {
+    grid-column: 50;
+}
+
+.disabled {
+    opacity: 0.5;
+}
+
+image:hover{
+    cursor: pointer;
+}
+
+.cls-4:hover{
+    cursor: pointer;
+}
+
+.color-selection {
+    margin: 3%;
 }
