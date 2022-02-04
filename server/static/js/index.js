@@ -43,6 +43,7 @@ socket.on("lobbylist", function(msg){
 
 $("#newlobby").submit(function(e){
     socket.emit("newlobby", {"name": e.target[0].value, "maxplayer": e.target[1].value, "password": e.target[2].value})
+    
     return false;
 });
 
@@ -51,8 +52,8 @@ function joinLobby(e, no_security, nome, giocatori){
     if (localStorage.getItem(nome)){
         window.location = "/lobby?name="+nome
     }
-    
-    localStorage.setItem(nome, JSON.stringify({"n_giocatori": giocatori, "password": !no_security}))
+    if (!localStorage.getItem(nome))
+        localStorage.setItem(nome, JSON.stringify({"n_giocatori": giocatori, "password": !no_security}))
     if(no_security)
         window.location = "/lobby?name="+nome
     else

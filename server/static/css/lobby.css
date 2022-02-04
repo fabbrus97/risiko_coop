@@ -66,22 +66,18 @@
     height: 25%;
     bottom: 0px;
     border: solid;
-    background-color: brown;
-    display: grid;
-}
-
-#dashboard span {
-    display: inline-grid;
+    background-color: rgb(185, 146, 72);
 }
 
 #obj_dashboard img {
-    height: 60%;
+    width: 85%;
 }
 
 
 #tank_div {
-    display: inline-grid;
-    grid-column: 1;
+    position: absolute;
+    display: inline-block;
+    width: 10%;    
 }
 
 #tank_counter_dashboard{
@@ -89,32 +85,103 @@
     background-color: white;
 }
 
-#obj_dashboard {
-    grid-column: 2;
+#obj_dashboard { /* span */
+    position: absolute;
+    display: inline-block;
+    width: 10%;   
+    left: 7%;
 }
 
+span.country_card {
+    position: relative;
+    display: inline-block;
+    width: 30%;
+}
+
+span.country_card img{
+    width: 100%;
+}
 #cards_dashboard{
-    grid-column: 3;
+    position: absolute;
+    
+    overflow-x: scroll;
+    display: inline-block;
+    width: 25%;
+    white-space: nowrap;
+    left: 16%;
 }
 
 #combo_span {
-    grid-column: 4;
+    position: absolute;
+
+    display: inline-block;
+    width: 5%;
+    left: 42%;
+
+    bottom: 20%;
 }
 
 #attack_span {
-    grid-column: 5;
+    position: absolute;
+
+    display: inline-block;
+    width: 5%;
+    left: 42%;
+
+    bottom: 13%;
+
 }
 
-#dices {
-    grid-column: 6;
+#move_span {
+    position: absolute;
+
+    display: inline-block;
+    width: 5%;
+    left: 42%;
+
+    bottom: 6%;
+}
+
+#dices { /*span*/
+    position: absolute;
+
+    display: inline-block;
+    width: 15%;
+    left: 54%;
 }
 
 #throw_span {
-    grid-column: 7;
+    position: absolute;
+
+    display: inline-block;
+    width: 5%;
+    left: 69%;
+    
+    bottom: 15%;
+
+}
+
+#text_status { /* div */ 
+    position: absolute;
+    right: 10%;
+    width: 15%;
+    bottom: 1%;
+    height: 23%;
+    text-align: center;
+    font-size: 1em;
+    border: solid;
+    background-color: white;
 }
 
 #next {
-    grid-column: 50;
+    position: absolute;
+
+    display: inline-block;
+    width: 5%;
+    right: 2%;
+
+    bottom: 15%;
+
 }
 
 .disabled {

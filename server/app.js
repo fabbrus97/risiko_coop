@@ -1,6 +1,7 @@
 
 var express = require('express');
 var app = express();
+const bodyParser = require('body-parser');
 const http = require('http');
 const { dirname } = require('path');
 const server = http.createServer(app);
@@ -9,6 +10,8 @@ const io = new Server(server);
 
 const KEEP_ALIVE_NO_PLAYERS = 3600 //se non entrano utenti entro 60 minuti, cancella la lobby
 const KEEP_ALIVE_PLAYERS = 3600*24 //se ci sono giocatori nella lobby, il tempo di vita è 24 ore
+
+app.use(bodyParser.urlencoded({ extended: true }));
 
 console.log("Server started.")
 
@@ -22,8 +25,25 @@ io.on('connection', (socket) => {
 
   socket.emit("lobbylist", lobbylist)
 
-  socket.on('disconnect', () => {
-    console.log(`User ${socket.id} disconnected`)
+  socket.on('disconnecting', () => {
+    console.log(`User ${socket.id} disconnecting`)
+
+    try {
+      console.log("Le rooms dell'utente erano")
+      console.log(socket.rooms)
+    
+      socket.rooms.forEach(function(room){
+        
+        lobby = lobbylist.find( l => l.name == room)
+        if (lobby)
+          lobby.numero_giocatori -= 1
+      });
+    } catch(e){
+      console.log(e)
+    }
+
+    io.sockets.emit("lobbylist", lobbylist)
+
   });
 
   socket.on("newlobby", (lobby) => {
@@ -55,6 +75,10 @@ io.on('connection', (socket) => {
   socket.on("joingroup", (details) => {
 
     console.log(`User ${socket.id} joining room ${details["name"]}`)
+    
+    lobbylist.find( l => l.name == details["name"]).numero_giocatori += 1
+    
+    io.sockets.emit("lobbylist", lobbylist)
 
     let name = details["name"]
     let password = details["password"]
@@ -97,13 +121,18 @@ app.get('/newlobby', function(req, res){
 app.get('/lobby', function(req, res){
     //lobby?name=mialobby
     let name = req.query["name"]
+    let logged = req.query["logged"]
     if (password_timestamp[name] != null){
       
       if (password_timestamp[name]["password"] == ""){ //lobby aperta
       
         res.sendFile(__dirname + "/static/html/lobby.html")
         return;
-      } else {
+      } else if (logged){
+        res.sendFile(__dirname + "/static/html/lobby.html")
+        return;
+      }
+      else {
       
         res.sendFile(__dirname + "/static/html/login.html")
         return;
@@ -118,6 +147,26 @@ app.get('/lobby', function(req, res){
     //invia un json con tutti i dati delle lobby
     res.json(lobbylist)
     
+})
+
+app.post('/lobby', function(req, res){
+  
+  let name = req.body["name"]
+  let pwd = req.body["pwd"]
+  console.log("Cerco di accedere alla lobby " + name)
+  if (!password_timestamp[name]){
+    console.log("La lobby non esiste!")
+    res.sendStatus(400)
+    return;
+  }
+
+  console.log("La password corretta è " + password_timestamp[name]["password"])
+  console.log("La password ricevuta è " + pwd)
+
+  if (password_timestamp[name]["password"].startsWith(pwd) && password_timestamp[name]["password"].endsWith(pwd)){
+    res.sendStatus(200)
+  } else
+    res.sendStatus(400) 
 })
 
 const port = 3000

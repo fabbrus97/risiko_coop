@@ -1,4 +1,13 @@
+$("#exampleModal").on("hide.bs.modal", e => { console.log("MODALE CHIUSO"); window.gs.setColor() });
+var selected_combo_cards = 0
+var selected_dices = 0
+wait_players_modal(1)
+
+/* ************************************************************************* */
+
 function pickColor(){
+    $("#unclosableModal").modal("hide")
+
     let colors = window.gs.colors
     
     let div_colors = ""
@@ -15,14 +24,17 @@ function pickColor(){
         div_colors += span
     })
 
+    console.log("colori!!!")
+    console.log(div_colors)
+
     $("#exampleModalLabel").text("Seleziona il tuo colore!")
     $("#exampleModalBody").empty()
+    console.log("Creo i colori (non sono fatto)")
     $("#exampleModalBody").append(div_colors)
 
+    console.log("Mostro il modale")
     $("#exampleModal").modal("show")
 }
-
-$("#exampleModal").on("hidden.bs.modal", e => { console.log("MODALE CHIUSO"); window.gs.setColor() });
 
 function setColor(color){
     //Nota: c'è una funzione analoga in globalState
@@ -47,6 +59,8 @@ function setColor(color){
 
 function start_putting_tanks(nations){
 
+    $("#text_status").text("Tocca a te, posiziona le tue armate!")
+
     //disabilita dadi
     disable_dices(true)
     disable_dices(false)
@@ -60,10 +74,8 @@ function start_putting_tanks(nations){
 
     nations.forEach( n => {
 
-        console.log("DEPLOY THE TANKSSS!!!! in " + n )
-
         $(`#${n}`).css("fill", window.gs.me().color)
-        $($(`#${n}`).siblings()[0]).text(window.gs.me().countries[n])
+        $($(`#${n}`).siblings()[1]).text(window.gs.me().countries[n])
         let image_already_present = false;
         Object.keys($(`#${n}`).siblings()).forEach( e => {
             if ($($(`#${n}`).siblings()[e]).prop("tagName") == "image")
@@ -71,8 +83,8 @@ function start_putting_tanks(nations){
         })
 
         if (!image_already_present){
-            let x = parseInt($($(`#${n}`).siblings()[0]).attr("x"))
-            let y = parseInt($($(`#${n}`).siblings()[0]).attr("y")) - 10
+            let x = parseInt($($(`#${n}`).siblings()[1]).attr("x")) 
+            let y = parseInt($($(`#${n}`).siblings()[1]).attr("y")) - 10
 
             var img = document.createElementNS('http://www.w3.org/2000/svg','image');
             img.setAttributeNS(null,'height','10px');
@@ -82,7 +94,8 @@ function start_putting_tanks(nations){
             img.setAttributeNS(null,'y', y);
             img.setAttributeNS(null, 'visibility', 'visible');
             $(img).click(e => remove_tank(e.target))
-            $(img).addClass("disabled")
+            if (!window.gs.final_phase || window.gs.final_phase && window.gs.me().countries[n] == 1)
+                $(img).addClass("disabled")
 
             $(`#${n}`).parent().append(img)
 
@@ -95,10 +108,14 @@ function start_putting_tanks(nations){
             img.setAttributeNS(null, 'visibility', 'visible');
             $(img).click(e => add_tank(e.target))
             $(`#${n}`).parent().append(img)
+            if (window.gs.final_phase)
+                $(img).addClass("disabled")
+
+
         }
     })
 
-    alert("Puoi cominciare a disporre le armate!!!!")
+    //alert("Puoi cominciare a disporre le armate!!!!")
 }
 
 function add_tank(element){
@@ -118,7 +135,7 @@ function add_tank(element){
         if ($(e).prop("tagName") == "path"){
             state = $(e).prop("id")
         }
-        if ($(e).prop("tagName") == "text"){
+        if ($(e).prop("tagName") == "text" && $(e).attr('class') == "armate"){
             text = e;
             n = parseInt($(e).text())
         }
@@ -150,7 +167,7 @@ function remove_tank(element){
         if ($(e).prop("tagName") == "path"){
             state = $(e).prop("id")
         }
-        if ($(e).prop("tagName") == "text"){
+        if ($(e).prop("tagName") == "text" && $(e).attr('class') == "armate"){
             text = e;
             n = parseInt($(e).text())
             if (n == 1)
@@ -185,19 +202,29 @@ function updateTanksCounter(n){
         })
         if (window.gs.player_turn == window.gs.me().turno && window.gs.turn != 0 ){ 
             //se il turno è 0, non posso abilitare i bottoni come farei normalmente
+
             //se la funzione è stata invocata da draw_interface - perché altri giocatori
             //hanno conquistato/perso territori -, non posso abilitare i bottoni come 
             //farei normalmente perché non è il mio turno
+
+            //infine, se è la fase di fine spostamento, non posso abilitare questi bottoni
+            
             $("#attack_phase_btn").prop("disabled", false)
+            if (!window.gs.final_phase)
+                $("#move_btn").prop("disabled", false)
             $("#next-btn").prop("disabled", false)
+            console.log("Grafica: DISABILITO NEXT-BTN")
+            
         } else if (window.gs.turn == 0){
             $("#next-btn").prop("disabled", false)
+            console.log("Grafica: DISABILITO NEXT-BTN")
+
         }
         
             
     } 
     if (n >= 1){
-        $("#attack_phase_btn").prop("disabled", true)
+
 
         Object.keys($("image")).forEach( i => {
             try {
@@ -210,10 +237,13 @@ function updateTanksCounter(n){
         })
         $("#attack_phase_btn").prop("disabled", true)
         $("#next-btn").prop("disabled", true)
+        $("#move_btn").prop("disabled", true)
 
 
     }
-    if (window.gs.me().getTanks() == window.gs.initial_tank_counter && window.gs.turn != 0){ //non vale nel 'turno' di preparazione
+    if (window.gs.me().getTanks() == window.gs.initial_tank_counter && window.gs.turn != 0 && !window.gs.final_phase){ 
+        //non vale nel 'turno' di preparazione o nella fase di spostamento
+        
         //se dopo che ho rimosso una armata il numero di carri torna ad essere 
         //quello che avevo inizialmente, allora non posso rimuovere altri carri
         // - perché starei facendo uno spostamento illegale di armate
@@ -221,6 +251,7 @@ function updateTanksCounter(n){
         Object.keys($("image")).forEach( i => {
             try {
                 if ($($("image")[i]).prop("href").baseVal.endsWith("minus.png")){
+                    console.log("Disabilito i meno!!!!")
                     $($("image")[i]).addClass("disabled")
                 }
             } catch(error) {
@@ -237,6 +268,13 @@ function updateTanksCounter(n){
 }
 
 function next(){
+    $("#text_status").text("Hai passato!")
+    window.move_to = ""
+    window.move_from = ""
+
+    //disabilita il click listener sugli stati
+    $(".cls-4").off("click")
+
     //elimina tasti +/-
     while(Object.keys($(".cls-4 ~ image")).length > 2){
         let image = $(".cls-4 ~ image")[0]
@@ -255,6 +293,10 @@ function next(){
                 $(btn).prop('disabled', true);
         } catch(exc) { /*do nothing*/ } 
     })
+
+
+
+    window.gs.final_phase = false;
 
     window.gs.next();
 }
@@ -289,7 +331,7 @@ function disable_dices(attack){
         $("#d3").addClass("disabled")
     }
 }
-var selected_attack_dices = 0
+
 function dice_action(dice){
     //non posso sempre selezionare tutti i dadi, es. 
     //se difendo da una nazione che ha solo 1 carro al massimo posso selezionare un dado
@@ -297,23 +339,28 @@ function dice_action(dice){
         return;
 
     if ($(dice).css("border-left-width") != "0px"){
-        selected_attack_dices -= 1
+        selected_dices -= 1
         $(dice).css("border", "0px")
     }
     else {
         $(dice).css("border", "solid")
-        selected_attack_dices += 1
+        selected_dices += 1
     }
 
     //Nota: i dadi sono disattivati se non ho selezionato due territori
     //e i territori devono essere confinanti
-    if (selected_attack_dices > 0)
+    if (selected_dices > 0 && window.attacking_nation.length > 0 && window.attacked_nation.length > 0)
         $("#throw_dices").prop("disabled", false)
+    else 
+        $("#throw_dices").prop("disabled", true)
+
 
     
 }
 
 function throw_dice(){
+    selected_dices = 0
+
     $("#throw_dices").prop('disabled', true)
 
     //cerchiamo i dadi attivi
@@ -369,12 +416,11 @@ function throw_dice(){
     //comunica esito dei dadi agli altri
     if (attack){
         window.gs.attack_dices = _numbers
-        window.comm.sendMessage({"command": "attack", "values": _numbers, "attacking": window.attacking_nation, "attacked": window.attacked_nation})
+        window.comm.sendMessage({"command": "attack", "values": _numbers, "attacking": window.attacking_nation, "attacked": window.attacked_nation, "from": window.gs.me().turno})
 
         $("#next-btn").prop("disabled", true)
+        $("#move_btn").prop("disabled", true)
 
-        //TODO mostra messaggio "in attesa dell'avversario" o qualcosa del genere
-        
     }
     else {
         let defense = {"command": "defense", "values": _numbers, "attacking": window.attacking_nation, "attacked": window.attacked_nation}
@@ -401,6 +447,7 @@ function set_dices(values, attack){
     
 }
 
+//chiamata a inizio turno o in altre fasi per aggiornare la grafica
 function draw_interface(with_tanks_buttons){
     //contatore carri
     updateTanksCounter(window.gs.me().getTanks())
@@ -421,41 +468,59 @@ function draw_interface(with_tanks_buttons){
     $("#cards_dashboard").empty()
     window.gs.me().ps.cards.forEach(c => {
 
-        let html = `<span class="card" name="${c.nome}"> <img src="../images/cards/${c.image}" onclick="card_action(this)"> </span>`
+        let html = `<span class="country_card"> <img name="${c.nome}" src="../images/cards/${c.image}"> </span>`
         $("#cards_dashboard").append(html)
 
     })
 
-    if (with_tanks_buttons){
-        //bottoni per aggiungere carri ai territori
-        start_putting_tanks(Object.keys(window.gs.me().countries))
+    if (window.gs.me().getTanks() > 0){
+
+        //abilita combo - se c'è - viene fatto da globalState
+
+        if (with_tanks_buttons){
+            //bottoni per aggiungere carri ai territori
+            start_putting_tanks(Object.keys(window.gs.me().countries))
+        }
+
+        //disabilita attacco, spostamento, passa turno viene fatto dalla funzione "next"
+
+    } else if (window.gs.player_turn == window.gs.me().turno){
+        //siccome non ci sono carri da disporre, possiamo abilitare le altre cose - se l'utente usa la combo,
+        //attacco, spostamento, passa turno verrano comunque sempre disabilitati da updateTanksCounter
+
+        $("#attack_phase_btn").prop("disabled", false)
+        $("#move_btn").prop("disabled", false)
+        $("#next-btn").prop("disabled", false)
+        console.log("Grafica: DISABILITO NEXT-BTN")
+
+            
     }
 
 }
 
-var selected_combo_cards = 0
 function card_action(img){
     if ($(img).css("border-left-width") != "0px"){
         selected_combo_cards -= 1
         $(img).css("border", "0px")
     }
     else {
-        $(img).css("border", "solid")
+        $(img).css("border", "4px solid red")
         selected_combo_cards += 1
     }
 
     //Nota: i dadi sono disattivati se non ho selezionato due territori
     //e i territori devono essere confinanti
     if (selected_combo_cards == 3)
-        $("#throw_dices").prop("disabled", false)
+        $("#combo_btn").prop("disabled", false)
+    else 
+        $("#combo_btn").prop("disabled", true)
 
 }
-
 
 function draw_country(country_name, number, color){
     $(`#${country_name}`).css("fill", color)
 
-    let text = $(`#${country_name}`).siblings()[0]
+    let text = $(`#${country_name}`).siblings()[1]
     $(text).text(number)
 
 }
@@ -463,51 +528,208 @@ function draw_country(country_name, number, color){
 function askUserCombo(){
     alert("Hai una combo a disposizione! Se la vuoi sfruttare, seleziona le carte che vuoi usare e clicca 'Usa combo'")
     $("#combo_btn").show()
-    var _cards = $(".cards")
+    $("#combo_btn").prop("disabled", true)
+    var _cards = $("span.country_card img")
     Object.keys(_cards).forEach( c => {
-        $(_cards[c]).click( e => { 
-            let element = $(e.target) 
-            if (element.css("border") != "0px")
-                element.css("border", "0px")
-            else
-                element.css("border", "solid")
+        if ($(_cards[c]).prop("tagName").toLowerCase() == "img"){
+            $(_cards[c]).off('click');
 
-        })
+            $(_cards[c]).click( e => { 
+                // let element = $(e.target) 
+                // if (element.css("border") != "0px")
+                //     element.css("border", "0px")
+                // else
+                //     element.css("border", "solid")
+                card_action(e.target)
+            })
+        }
     })
 }
 
 function use_combo(){
 
-    var _cards = $(".cards")
+    var _cards = $("span.country_card img")
     var selected_cards = []
     Object.keys(_cards).forEach( c => {
-        if ($(_cards[c]).css("border") != "0px"){
-            selected_cards.append($(_cards[c]).attr('name'))
-            $(_cards[c]).css("border", "0px")
+        try {
+            if ($(_cards[c]).prop("tagName").toLowerCase() == "img" && $(_cards[c]).css("border-left-width") != "0px"){
+                selected_cards.push($(_cards[c]).attr('name'))
+                $(_cards[c]).css("border", "0px")
+            }
+        } catch (exc){
+            //do nothing
         }
     })
+    selected_combo_cards = 0
 
     //ho raccolto le carte selezionate dall'utente, controlliamo che sia una combo
-    let tanks = this.gs.me().useCombo(selected_cards)
+    let tanks = window.gs.me().ps.useCombo(selected_cards)
 
     //abbiamo una combo, aggiorniamo la grafica: rimuoviamo le carte, nascondiamo il bottone...
-    if (tanks > 0)
-        draw_interface()
 
-    $("#combo_btn").hide()
-    $("#cards_dashboard").empty()
+    if (tanks > 0){
+        draw_interface()
+        $("#combo_btn").hide()
+    }
 
 
 }
 
-function attack_phase(){
+function final_phase_move(){
+    //abilita bottone per passare il turno e per attaccare
+    $("#next-btn").prop("disabled", false)
+    console.log("Grafica: DISABILITO NEXT-BTN")
+
+
+    //abilita bottone per attaccare
+    $("#attack_phase_btn").prop("disabled", false)
+    window.attacking_nation = ""
+    window.attacked_nation = ""
+
+    //disabilita bottone per fase finale di movimento
+    $("#move_btn").prop("disabled", true)
+
     //disabilita bottoni dadi etc., rimuovi tasti +, - per le armate
     while(Object.keys($(".cls-4 ~ image")).length > 2){
         let image = $(".cls-4 ~ image")[0]
         $(image).remove()
     }
 
+    window.gs.final_phase = true
+    
+    $("#text_status").text("Clicca su due territori confinanti per lo spostamento!")
+
+    window.move_from = ""
+    window.move_to = ""
+
+    $(".cls-4").off("click")
+    $(".cls-4").click( e => { setCountryForMove(e.target);})
+    console.log("Clicca sulle nazioni dove vuoi effettuare lo spostamento!")
+
+    window.comm.sendMessage({"command": "update_status", "turno": window.gs.me().turno, "tanks": window.gs.me().countries, "turn": window.gs.turn})
+    
+}
+
+function setCountryForMove(country){
+    let country_name = $(country).prop("id")
+
+    if (window.gs.me().countries[country_name]){
+        if (window.move_from == country_name){
+            
+            deselectCountryMovePhase(country_name)
+            $("#text_status").html("Da: <b>" + window.move_from + "</b> a: <b>" + window.move_to + "</b>")
+            
+            return;
+        }
+        if (window.move_to == country_name){
+            deselectCountryMovePhase(country_name)
+
+
+            $("#text_status").html("Da: <b>" + window.move_from + "</b> a: <b>" + window.move_to + "</b>")
+            return;
+        }
+
+        if (window.move_from && window.move_to){
+            console.log("Devi prima deselezionare un territorio!")
+            $("#text_status").html("Da: <b>" + window.move_from + "</b> a: <b>" + window.move_to + "</b>")
+            return;
+        }
+        
+        if (!window.move_from){
+            console.log("Imposto " + country_name + " come stato from")
+            window.move_from = country_name
+            window.original_tanks_from = parseInt($($(`#${window.move_from}`).siblings()[1]).text())
+        } else {
+            console.log("Imposto " + country_name + " come stato to")
+            window.move_to = country_name
+
+            window.original_tanks_to = parseInt($($(`#${window.move_to}`).siblings()[1]).text())
+
+        }
+        if (adjacency[window.move_from].find( n => n == window.move_to)) {
+            //Nota: lo spostamento non avviene necessariamente da from a to, potrebbe
+            //anche essere il contrario
+            
+            start_putting_tanks([window.move_from, window.move_to], true)
+        } else {
+            console.log("territori non adiacenti, considero from " + window.move_from + " come valido e cancello to")
+            window.move_to = ""
+            $("#throw_dices").prop("enabled", false)
+        }
+
+        $("#text_status").html("Da: <b>" + window.move_from + "</b> a: <b>" + window.move_to + "</b>")
+
+    }
+
+}
+
+function deselectCountryMovePhase(country_name){
+    if (window.move_from == country_name){
+        console.log("Deseleziono " + country_name + " come stato from")
+
+        console.log("Lo stato to è " + window.move_to)
+
+        $($(`#${window.move_from}`).siblings()[1]).text(window.original_tanks_from)
+        window.gs.me().countries[window.move_from] = window.original_tanks_from
+        if (window.move_to){
+            $($(`#${window.move_to}`).siblings()[1]).text(window.original_tanks_to)
+            window.gs.me().countries[window.move_to] = window.original_tanks_to
+        }
+
+        window.move_from = ""
+    } 
+    if (window.move_to == country_name){
+        console.log("Deseleziono " + country_name + " come stato to")
+        console.log("Lo stato from è " + window.move_from)
+
+        $($(`#${window.move_to}`).siblings()[1]).text(window.original_tanks_to)
+        window.gs.me().countries[window.move_to] = window.original_tanks_to
+        if (window.move_from){
+            $($(`#${window.move_from}`).siblings()[1]).text(window.original_tanks_from)
+            window.gs.me().countries[window.move_from] = window.original_tanks_from
+        }
+        
+        window.move_to = ""
+    }
+    
+    window.gs.me().tanks = 0
+    updateTanksCounter(0)
+
+    while(Object.keys($(".cls-4 ~ image")).length > 2){
+        let image = $(".cls-4 ~ image")[0]
+        $(image).remove()
+    }
+}
+
+function attack_phase(){
+    //disabilita bottone per fase d'attacco 
     $("#attack_phase_btn").prop('disabled', true)
+
+    //bottone per combo si disabilita da solo dopo averlo usato
+    
+    //disabilita dadi e disposizione armate (rimuovi tasti +, - per le armate)
+    while(Object.keys($(".cls-4 ~ image")).length > 2){
+        let image = $(".cls-4 ~ image")[0]
+        $(image).remove()
+    }
+
+    //abilita bottone per spostamento fine turno
+
+    if (window.gs.final_phase){
+        window.gs.final_phase = false
+        deselectCountryMovePhase(window.move_from)
+        deselectCountryMovePhase(window.move_to)
+    }
+    $("#combo_btn").prop('disabled', false)
+
+    //abilita fine turno
+    $("#next-btn").prop('disabled', false)
+
+
+    $("#text_status").append("<div>Fase di attacco! Clicca su due territori, poi clicca sui dadi che vuoi usare</div>")
+    
+    $(".cls-4").off('click');
+    $(".cls-4").click( e => { let dices = setCountryForAttack(e.target); if (dices > 0 ) enable_dices(true, dices) ;})
 
     //la fase di attacco inizia dopo aver posizionato i carri, quindi devo segnalare agli
     //avversari le nuove quantità di carri sui miei territori
@@ -515,14 +737,11 @@ function attack_phase(){
     window.comm.sendMessage({"command": "update_status", "turno": window.gs.me().turno, "tanks": window.gs.me().countries, "turn": window.gs.turn})
 
     console.log("Iniziamo la fase di attacco!")
-    //mostra all'utente area messaggi per i territori selezionati come attacco/difesa
+    //setCountryForAttack mostra all'utente area messaggi per i territori selezionati come attacco/difesa
     window.attacking_nation = ""
     window.attacked_nation = ""
-    //TODO $("#status").empty().show();
 
 }
-
-$(".cls-4").click( e => { let dices = setCountryForAttack(e.target); if (dices > 0 ) enable_dices(true, dices) ;})
 
 function setCountryForAttack(country){
 
@@ -542,6 +761,9 @@ function setCountryForAttack(country){
             //voglio deselezionare la nazione
             window.attacking_nation = ""
             console.log("Tolgo la nazione " + country + " come attaccante")
+            $("#throw_dices").prop("disabled", true)
+
+
         } else {
             window.attacking_nation = name
             console.log("Imposto la nazione " + country + " come attaccante")
@@ -551,11 +773,16 @@ function setCountryForAttack(country){
             //voglio deselezionare la nazione
             window.attacked_nation = ""
             console.log("Tolgo la nazione " + country + " come attaccata")
+            $("#throw_dices").prop("disabled", true)
+
         } else {
             window.attacked_nation = name
             console.log("Imposto la nazione " + country + " come attaccata")
         }
     }
+
+    $("#text_status").html("Da: <b>" + window.attacking_nation + "</b> a: <b>" + window.attacked_nation + "</b>")
+    
 
 
     let number = 0
@@ -582,3 +809,38 @@ function setCountryForAttack(country){
 
 }
 
+function end_game_modal(reason, obj){
+    let modal = $("#unclosableModal")
+    modal.find('.modal-title').text("Partita terminata!")
+    modal.find('.modal-body').empty();
+    modal.find('.modal-body').text(reason)
+    if (obj){
+        modal.find('.modal-body').append(`<div><img src="../images/cards/${obj.image}"></div>`)
+    }
+    modal.modal('show')
+}
+
+function wait_players_modal(logged_players){
+    console.log("WAIT PLAYERS MODAL")
+    let modal = $("#unclosableModal")
+    modal.find('.modal-title').text("In attesa dei giocatori...")
+    let counter = modal.find('.modal-body').find("#connected-players")
+    if (counter.length == 0){
+        modal.find('.modal-body').html(`
+            <div class="progress" style="width: 90%">
+                <div class="progress-bar" role="progressbar" id="connected-players" style="width: ${(1/players_in_lobby) * 100}%;" aria-valuenow="1" aria-valuemin="1" aria-valuemax="${players_in_lobby}">1/${players_in_lobby}</div>
+            </div>
+        `)
+        modal.modal("show")
+
+    } else {
+        $(counter[0]).css("width", `${(logged_players/players_in_lobby)*100}%`) 
+        $(counter[0]).prop("aria-valuenow", logged_players) 
+        $(counter[0]).text(`${logged_players}/${players_in_lobby}`)
+    }
+
+    if (logged_players == players_in_lobby){
+        modal.find('.modal-body').html("<div> In attesa degli altri giocatori...</div>")
+    }
+
+}

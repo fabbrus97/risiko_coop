@@ -17,7 +17,7 @@ const cards = {
                 "bonus": 7}
     },
     "countries": [
-        {"nome":"alaska", "tipo":"fante", "image": "Alaska.jpg"}, {"nome": "territori_n_o", "tipo":"cannone", "image": "Territori del Nord Ovest.jpg"}, {"nome": "groenlandia",  "image": "Groenlandia.jpg"}, 
+        {"nome":"alaska", "tipo":"fante", "image": "Alaska.jpg"}, {"nome": "territori_n_o", "tipo":"cannone", "image": "Territori del Nord Ovest.jpg"}, {"nome": "groenlandia", "tipo":"cavallo", "image": "Groenlandia.jpg"}, 
         {"nome": "alberta", "tipo":"fante", "image": "Alberta.jpg"}, {"nome": "ontario", "tipo":"cavallo", "image": "Ontario.jpg"}, {"nome": "quebec", "tipo":"cannone", "image": "Quebec.jpg"}, 
         {"nome": "stati_uniti_occidentali", "tipo":"fante", "image": "Stati Uniti Occidentali.jpg"}, 
         {"nome": "stati_uniti_orientali", "tipo":"cannone", "image": "Stati Uniti Orientali.jpg"}, {"nome": "america_centrale", "tipo":"cavallo", "image": "America Centrale.jpg"}, {"nome": "islanda", "tipo":"fante", "image": "Islanda.jpg"}, 
@@ -29,18 +29,18 @@ const cards = {
         {"nome": "cita", "tipo":"fante", "image": "Cita.jpg"}, {"nome": "mongolia", "tipo":"cannone", "image": "Mongolia.jpg"}, {"nome": "cina", "tipo":"cavallo", "image": "Cina.jpg"}, 
         {"nome": "india", "tipo":"fante", "image": "India.jpg"}, {"nome": "siam", "tipo":"cannone", "image": "Siam.jpg"}, {"nome": "venezuela", "tipo":"cannone", "image": "Venezuela.jpg"}, 
         {"nome": "brasile", "tipo":"cannone", "image": "Brasile.jpg"}, {"nome": "peru", "tipo":"cavallo", "image": "Peru.jpg"}, {"nome": "argentina", "tipo":"fante", "image": "Argentina.jpg"}, 
-        {"nome": "africa_n", "tipo":"cavallo", "image": "Africa del Nord.jpg"}, 
+        {"nome": "africa_n", "tipo":"fante", "image": "Africa del Nord.jpg"}, 
         {"nome": "egitto", "tipo":"fante", "image": "Egitto.jpg"}, {"nome": "congo", "tipo":"cavallo", "image": "Congo.jpg"}, {"nome": "africa_o", "tipo":"cannone", "image": "Africa Orientale.jpg"}, 
-        {"nome": "africa_s", "tipo":"cannone", "image": "Africa del Sud.jpg"}, {"nome": "madagascar", "tipo":"fante", "image": "Madagascar.png"}, {"nome": "indonesia", "tipo":"cavallo", "image": "Indonesia.jpg"}, 
+        {"nome": "africa_s", "tipo":"cannone", "image": "Africa del Sud.jpg"}, {"nome": "madagascar", "tipo":"fante", "image": "Madagascar.jpg"}, {"nome": "indonesia", "tipo":"cavallo", "image": "Indonesia.jpg"}, 
         {"nome": "nuova_guinea", "tipo":"cavallo", "image": "Nuova Guinea.jpg"}, {"nome": "australia_occ", "tipo":"cannone", "image": "Australia Occidentale.jpg"}, 
-        {"nome": "australia_or", "tipo":"fante", "image": "Australia Orientale.jpg"}, {"nome": "bonus", "tipo": "bonus", "image": "Jolly1.png"}, {"nome": "bonus", "tipo": "bonus", "image": "Jolly1.png"}],
+        {"nome": "australia_or", "tipo":"fante", "image": "Australia Orientale.jpg"}, {"nome": "bonus", "tipo": "bonus", "image": "Jolly1.jpg"}, {"nome": "bonus", "tipo": "bonus", "image": "Jolly1.jpg"}],
     //se il campo kill è definito, l'obbiettivo conquer è sempre "conquista 24 territori" (se il giocatore è ucciso o non presente)
     //se il campo conquer è true, bisogna conquistare un terzo continente a scelta
     //se nulla è definito, bisogna conquistare 24 territori
     "objectives": [ 
         {"kill": "green", "conquer": {"countries": [], "extra": null}, "image": "kill_green.jpg"},
         {"kill": "yellow", "conquer": {"countries": [], "extra": null}, "image": "kill_yellow.jpg"},
-        {"kill": "black", "conquer": {"countries": [], "extra": null}, "image": "kill_black.jpg"},
+        {"kill": "red", "conquer": {"countries": [], "extra": null}, "image": "kill_red.jpg"},
         //conquista europa e oceania e un terzo continente a scelta
         {"kill": "", "conquer": {"countries": [9, 10, 11, 12, 13, 14, 15, 38, 39, 40, 41], "extra": true}, "image": "conquer_Europa_Oceania.jpg"},
         //conquista asia e sud america
@@ -71,21 +71,21 @@ const adjacency = {
 	"europa_sett": ["scandinavia", "gran_bretagna", "europa_occ", "europa_mer", "ucraina"],
 	"scandinavia": ["islanda", "gran_bretagna", "europa_sett", "ucraina"],
 	"europa_mer": ["europa_occ", "europa_sett", "ucraina", "medio_or", "africa_n", "egitto"],
-	"ucraina": ["scandinavia", "europa_sett", "europa_mer", "medio_or", "Afghanistan", "urali"],
+	"ucraina": ["scandinavia", "europa_sett", "europa_mer", "medio_or", "afghanistan", "urali"],
 	"europa_occ": ["gran_bretagna", "europa_sett", "europa_mer", "africa_n"],
 	"congo": ["africa_n", "africa_o", "africa_s"],
-	"africa_o": ["egitto", "africa_n", "congo", "africa_s", "madagascar"],
+	"africa_o": ["egitto", "africa_n", "congo", "africa_s", "madagascar", "medio_or"],
 	"egitto": ["europa_mer", "africa_n", "africa_o", "medio_or"],
 	"madagascar": ["africa_o", "africa_s"],
 	"africa_n": ["europa_occ", "europa_mer", "brasile", "egitto", "congo", "africa_o"],
 	"africa_s": ["madagascar", "africa_o", "congo"],
-	"afghanistan": ["ucraina", "urali", "cina", "medio_or"],
-	"cina": ["mongolia", "siberia", "urali", "afghanistan", "medio_or", "india", "siam"],
-	"india": ["siam", "medio_or", "cina"],
+	"afghanistan": ["ucraina", "urali", "cina", "medio_or", "india"],
+	"cina": ["mongolia", "siberia", "urali", "afghanistan", "india", "siam"],
+	"india": ["siam", "medio_or", "cina", "afghanistan"],
 	"cita": ["mongolia", "siberia", "jacuzia", "kamchatka"],
 	"giappone": ["kamchatka", "mongolia"],
 	"kamchatka": ["alaska", "jacuzia", "cita", "mongolia", "giappone"],
-	"medio_or": ["europa_mer", "egitto", "india", "cina", "afghanistan", "ucraina"],
+	"medio_or": ["europa_mer", "egitto", "india", "afghanistan", "ucraina", "africa_o"],
 	"mongolia": ["cina", "siberia", "cita", "kamchatka", "giappone"],
 	"siam": ["cina", "india", "indonesia"],
 	"siberia": ["jacuzia", "cita", "mongolia", "cina", "urali"],
@@ -110,6 +110,11 @@ class Player {
         this.color = color;
         this.tanks = tanks;
         this.enemy = enemy;
+        this.missing = false; //se true, il giocatore è disconnesso
+
+        this.ready = false; // bool che indica se il giocatore ha già disposto le truppe nel turno 0
+        this.killed = false; // se true, il giocatore è stato ucciso
+        this.killedby = "" //il colore del giocatore che ha ucciso questo player
 
         this.countries = {}
         this.ps = new PrivateState();
@@ -163,13 +168,16 @@ class Player {
             //remove country
             delete this.countries[country]
         }
+
+        
+        this.killed = Object.keys(this.countries).length == 0
+        
     }
 
     getTanks(){
         return this.tanks
     }
     
-    //TODO questa funzione non è chiamata se il primo giocatore droppa la connessione all'inizio, controlla
     start_playing(_cards){
         
         console.log("DEBUG inizio a giocare")
@@ -182,7 +190,7 @@ class Player {
         if (this.turno == 1 && this.ps.getObjective() != null){
             console.log("Tutti hanno un obiettivo, iniziamo a pescare gli stati")
             //questa funzione pesca una carta e dice agli altri giocatori di pescare
-            this.set_countries(cards.countries.copyWithin(0, cards.countries.length))
+            this.set_countries(structuredClone(cards.countries))
             return;
         }
 
@@ -193,18 +201,17 @@ class Player {
             return
         }
 
-
-
         //se sono il giocatore > 1 mi vengono passate le carte rimanenti
         //quindi pesco e passo
         let available_cards_obj = {};
         if (_cards == null){
-            available_cards_obj = cards.objectives.copyWithin(0, cards.objectives.length)
+            available_cards_obj = structuredClone(cards.objectives)
             console.log("GIOCATORE 1 sto per pescare obiettivo da tutte le carte obiettivo:")
             let c = this.draw_card(available_cards_obj)
             this.ps.setObjective(c)
             console.log("Ho pescato e settato l'obiettivo")
             console.log(c)
+            // draw_interface() //non posso disegnare l'obiettivo prima di scegliere il colore
             
         } else {
             console.log("GIOCATORE > 1 sto per pescare obiettivo")
@@ -214,8 +221,8 @@ class Player {
             console.log("Ho pescato e settato l'obiettivo")
             console.log(c)
             available_cards_obj = _cards
-            console.log("Carte rimanenti: ")
-            console.log(available_cards_obj)
+            // console.log("Carte rimanenti: ")
+            // console.log(available_cards_obj)
             
         }
 
@@ -233,17 +240,23 @@ class Player {
     draw_card(_cards){
         let draw_id = parseInt(Math.random()*100%_cards.length)
         let card = _cards[draw_id]
+        console.log("Lunghezza delle carte: " + cards.countries.length)
         _cards.splice(draw_id, 1)
+        console.log("Ho eliminato una carta; lunghezza delle carte: " + cards.countries.length)
         return card;
     }
     
     set_countries(_cards){
         console.log("DEBUG Ho pescato una carta, sono il giocatore " + this.turno)
         let card = this.draw_card(_cards)
-        while (card.nome == "bonus")
+        while (card.nome == "bonus" && _cards.length > 0)
             card = this.draw_card(_cards)
 
-        this.addCountry(card.nome)    
+        if (card.nome != "bonus"){ 
+            //devo mettere questo controllo perché c'è la possibilità che l'ultima carta del mazzo 
+            //sia un bonus e io l'abbia pescata
+            this.addCountry(card.nome)    
+        }
         let message = {};
         if (_cards.length > 0){
             message = {"command": "draw_country", "cards": _cards, "turno": this.turno}
@@ -253,7 +266,9 @@ class Player {
             message = {"command": "start_putting_tanks"}
             // window.comm.sendMessage(message)
             start_putting_tanks(Object.keys(this.countries));
+            $("#unclosableModal").modal("hide")
         }
+
         window.comm.sendMessage(message)
     }
 
@@ -274,6 +289,8 @@ class Player {
         if (this.checkCombo()){
             askUserCombo(); 
         }
+
+        
         
     }
 
@@ -470,30 +487,39 @@ class Player {
         return b1 || b2 || b3 || b4 || b5;
     }
 
-    checkWin(){let win = false;
+    checkWin(){
+        let win = false;
         if (this.ps.getObjective().kill){
             //devo uccidere qualcuno...
-            let enemy = this.ps.getObjective().kill;
-            window.gs.players.forEach( p => {
-                if (this.color == enemy) // sono io
-                    if (Object.keys(this.countries).length >= 24)
-                        win = true //ho vinto!
-                else if (p.color == enemy){
-                    //il nemico non ha più territori/armate
-                    if (Object.keys(this.countries).length == 0)
-                        win = true //ho vinto!
+            // let enemy = this.ps.getObjective().kill;
+            let enemy = window.gs.players.find(p => p.color == this.ps.getObjective().kill && p.color != this.color)
+            //se il nemico esiste vinco se non ha più territori
+            if (enemy){
+                //TODO questo è sbagliato perché se i verdi non hanno territori allora vinco
+                //MA vuol dire che se un altro giocatore fa l'ultima uccisione vinco io, cosa che deve succedere
+                //solo se IO ho fatto l'ultima uccisione
+                // win = Object.keys(enemy.countries).length == 0
+                win = enemy.killed && enemy.killedby == this.color
+                if (!win && enemy.killed){
+                    //il nemico è morto, ma non ho vinto: qualcun'altro lo ha ucciso
+                    win = Object.keys(this.countries).length >= 24
+
                 }
-            })
+            } else { 
+                //se il nemico non esiste/sono io vinco se ho >= 24 territori
+                win = Object.keys(this.countries).length >= 24
+            }
         } else {
             if (this.ps.getObjective().conquer.extra === false){
                 //devo controllare di avere tutte le nazioni della lista 
+                win = true;
                 this.ps.getObjective().conquer.countries.forEach( index => {
                     let country2check = cards.countries[index].nome
                     if (!this.countries[country2check])
                         win = false
                 })
-                return true //ho vinto!
             } else if (this.ps.getObjective().conquer.extra == null){
+
                 //devo conquistare 24 territori a scelta
                 if (Object.keys(this.countries).length >= 24)
                     win = true //ho vinto!
@@ -520,15 +546,17 @@ class GlobalState{
         this.players.push(player)
 
         this.attack_dices = []
-        this.available_cards = cards.countries.copyWithin(0, cards.countries.length)
+        this.available_cards = structuredClone(cards.countries)
         this.turn = 0 //turno globale
-        this.colors = ["red", "purple", "black", "yellow", "green", "blue"] //colori disponibili
+        this.colors = ["red", "purple", "lightsalmon", "yellow", "green", "cornflowerblue"] //colori disponibili
         this.obj_cards = []
         this.initial_tank_counter = 0 //quanti carri ha a disposizione il giocatore all'inizio del proprio turno
         //questa variabile serve perché se posiziono e.g. 2 carri a inizio turno su un territorio che ha già 5 carri
         //portandolo in totale a 7, ma cambio idea, al massimo potrò rimuovere i 2 carri appena aggiunti e non anche i 
         //4 toglibili precedentemente posizionati
         this.player_turn = 0 //giocatore corrente
+
+        this.final_phase = false; // fase di movimento armate prima di passare il turno
     }
 
     me(){
@@ -548,31 +576,151 @@ class GlobalState{
     */ 
     
     /**
-     * 
-     * @param {GlobalState} previousState 
+     * funzione per controllare che un avversario non stia barando
+        controlliamo che abbia fatto un solo spostamento e in tutti gli altri 
+        territori ci sia il giusto numero di carri
      */
-    checkState(previousState){
-        //TODO
-        //controlla che lo stato inviato da un giocatore sia uguale al mio
+    checkState(newState){
+        let player = this.players.find(p => p.turno == newState.turno)
+        
+        //il giocatore sta provando a cambiare il proprio turno?
+        if (player.turno != newState.turno){
+            console.log("CHEATER: Il giocatore aveva detto di essere il " + player.turno + " e ora si dichiara il " + newState.turno)
+            return false;
+        }
+        
+        let move_country_from = ""
+        let move_country_to = ""
+        for (c in newState.countries){
+            if (!player.countries[c]){ //il giocatore si è aggiunto uno stato senza averlo conquistato
+                console.log("CHEATER: Il giocatore si è aggiunto lo stato " + c + " che prima non aveva")
+                return false;
+            }
+
+            if (newState.tanks[c] < player.countries[c]){
+                if (move_country_from.length > 0){
+                    console.log("CHEATER: Il giocatore ha provato a togliere carri da " + move_country_from + " E " + c + " (al massimo 1 è consentito)")
+                    return false;
+                }
+                move_country_from = c
+            }
+            if (newState.tanks[c] > player.countries[c]){
+                if (move_country_to.length > 0){
+                    console.log("CHEATER: Il giocatore ha provato ad aggiungere carri da " + move_country_from + " E " + c + " (al massimo 1 è consentito)")
+                    return false
+                }
+                move_country_to = c
+            }
+            
+        }
+
+        if (move_country_from){
+            console.log("CONTROLLO CHEATER: ((player.countries[move_country_from] - newState.tanks[move_country_from]) == (newState.tanks[move_country_to] - player.countries[move_country_to])):")
+            console.log(player.countries[move_country_from] + " - " + newState.tanks[move_country_from] + " == " + newState.tanks[move_country_to] + " - " + player.countries[move_country_to])    
+            return ((player.countries[move_country_from] - newState.tanks[move_country_from]) == (newState.tanks[move_country_to] - player.countries[move_country_to]))
+        }
+        else 
+            return true
+            
+    }
+
+    //funzione per controllare che un avversario non stia barando
+    checkCard(card, objective){
+        if (objective){ //controlliamo una carta obiettivo
+            if (window.gs.me().ps.getObjective() == card)
+                return false; //l'avversario bara, ha il mio stesso obiettivo
+        } else {
+            for (c in window.gs.me().ps.cards){
+                if ( c == card)
+                    return false;
+            }
+        }
+    }
+
+    //funzione per controllare che un avversario non stia barando
+    //es. se ha 4 territori e mette 2 armate anziché 1, sta barando
+    /**
+     * 
+     * @param {int} player_turn //turno del giocatore che ha posizionato i carri
+     * @param {int} tanks  //numero di carri posizionati
+     */
+    checkTanks(player_turn, tanks){ 
+        console.log("Controllo i carri del giocatore " + player_turn + " che ha usato " + tanks)
+        var player = this.players.find(p => p.turno == player_turn)
+        let available_tanks = parseInt(Object.keys(player.countries).length/3)
+        console.log("I carri che il giocatore ha a disposizione sono " + available_tanks)
+        return available_tanks == tanks
     }
 
     setColor(){
+        
+        let unknown_player = false
+        window.gs.players.forEach( p =>{
+            if (Object.keys(p.color).length == 0){ //c'è un giocatore di cui non so gli stati
+                console.log("NON so il colore di " + p.color)
+                unknown_player = true
+            }
+        })
+        if (unknown_player)
+            wait_players_modal(players_in_lobby)
+        
         let color = this.me().color
         console.log("DEVO ELIMINARE IL COLORE " + color)
         let colorIndex = window.gs.colors.findIndex(c => c == color)
         if (colorIndex < 0)
             return
         window.gs.colors.splice(colorIndex, 1)
+
+        //salvo il colore nel localStorage
+        let lobby = JSON.parse(localStorage.getItem(lobby_name))
+        console.log("Salvo il colore dentro localStorage")
+        lobby.ps.color = color
+        console.log(lobby)
+        localStorage.setItem(lobby_name, JSON.stringify(lobby))
+
         window.comm.sendMessage({"command": "player_color", "turno": this.me().turno, "color": color})
         
 
         console.log("Dico agli altri giocatori di giocare")
         window.comm.sendMessage({"command": "draw_obj", "cards": this.obj_cards, "turno": this.me().turno})
+        draw_interface();
     }
 
     action(action){
         //ci sono alcune azioni "universali", per aggiornare lo stato globale
         //e altre che dipendono dal turno
+
+        //se un giocatore è scollegato, player_length non cambia; questo significa che
+        //anche se i giocatori ora sono 5 e non 6, il 5 dirà che ora è il turno del 6 anche se
+        //sarebbe il turno di 1 
+        let missing_players = 0
+        this.players.forEach(p => {
+            if (p.missing)
+                missing_players += 1
+        })
+        let actual_players = this.players.length - missing_players 
+        
+        let nextPlayer = 0
+        if (action.from || action.turno){
+            try {
+                let t = action.from ? action.from : action.turno
+                console.log("Action: calcolo il prossimo giocatore a partire da " + t)
+                console.log("I giocatori sono ")
+                console.log(this.players)
+
+                nextPlayer = (t % this.players.length) + 1
+                console.log("NextPlayer è " + nextPlayer)
+                while (this.players.find(p => p.turno == nextPlayer).missing){ 
+                    console.log(nextPlayer + " è missing, vediamo chi c'è dopo")
+                    nextPlayer = (nextPlayer%this.players.length) + 1
+                    console.log("Dopo c'è " + nextPlayer)
+                }
+            } catch (exc){
+
+            }
+            
+        }
+        
 
         console.log("Ricevuta azione")
         console.log(action)
@@ -589,14 +737,67 @@ class GlobalState{
         }
 
         if (action.command == "next"){
-            this.turn = action.turn
-            console.log("Vediamo lo stati degli altri  giocatori...")
-            this.players.forEach( p => {
+            let player = this.players.find(p => p.turno == action.turno)
 
-                if (p.turno == action.turno){
-                    p.setCountries(action.tanks)
+            if (this.turn != 0){
+
+                //controlla stato/carri disponibili
+                if (!this.checkState(action)){
+                    this.end_game("Il giocatore " + action.turno + " sta barando (troppi spostamenti/aggiunta illegale di una nazione)")
+                    return;
+                }
+                
+
+                let old_tanks = 0
+                Object.keys(player.countries).forEach( c => {
+                    old_tanks += player.countries[c]
+                })
+                let new_tanks = 0
+                Object.keys(action.tanks).forEach( c => {
+                    new_tanks += action.tanks[c]
+                })
+
+                console.log("Controllo carri del nemico: old/new:" + old_tanks + " " + new_tanks)
+                if (action.turno, new_tanks-old_tanks > 0 && !this.checkTanks(action.turno, new_tanks-old_tanks)){
+                    this.end_game("Il giocatore " + action.turno + " sta barando (ha posizionato troppi carri)")
+                    return;
+                }
+            }
+
+            let firstPlayer = 1
+            while (this.players.find(p => p.turno == firstPlayer).missing)
+                firstPlayer += 1
+            if (this.me().turno != firstPlayer){
+                //nelle fasi iniziali i giocatori potrebbero autonomamente 
+                //settare il turno da 0 a 1; in ogni caso, se sono il giocatore 1, 
+                //non devo mai settare il turno da un altro giocatore (perché sono
+                //io che li cambio)
+            
+                this.turn = action.turn
+            }
+
+            
+
+            player.setCountries(action.tanks)
+           
+            let unknown_player = false
+            this.players.forEach( p =>{
+                if (Object.keys(p.countries).length == 0 && !p.killed){ //c'è un giocatore di cui non so gli stati
+                    console.log("NON SO I TUOI TERRITORI " + p.color)
+                    unknown_player = true
                 }
             })
+                    
+            if (!unknown_player && this.me().ready){
+                if (this.turn == 0 && this.me().turno != 1){
+                    console.log("Imposto il turno a 1!!! perché siamo nel turno globale 0 e io sono il giocatore " + this.me().turno)
+                    //questo serve perché quando il giocatore 1 inizia a giocare non broadcasta il turno, 
+                    //ma solo dopo aver giocato
+                    this.turn = 1
+                }
+                draw_interface()
+            }
+
             //nota: turn è il turno globale (numero di mani giocate, es. 13)
             //turno è il turno del giocatore (es. rosso è 1, verde è 2...)
             //player_turn è il giocatore che può giocare ora (es. ora è il turno di 2)
@@ -608,12 +809,20 @@ class GlobalState{
             //controlliamo se siamo sotto attacco
             let nation = action.attacked;
             this.attack_dices = action.values
-            Object.keys(this.me().countries).forEach(c => {
-                if (c == nation){
-                    this.prepare_defense(action);
-                    
+        
+            this.players.forEach(p => {
+                //se deve difendere un giocatore che si è disconnesso, e io sono il giocatore
+                //successivo a quello che attacca, tiro io al suo posto - se la nazione sotto 
+                //attacco è mia o del giocatore mancante, altrimenti non devo far nulla
+                if (p.countries[nation]){
+                    //abbiamo trovato il giocatore con la nazione sotto attacco
+                    if (p.turno == this.me().turno || (p.missing && this.me().turno == nextPlayer)){
+                        this.prepare_defense(action, p.countries);
+                    }
                 }
+                
             })
+            
             return;
         } 
 
@@ -632,15 +841,28 @@ class GlobalState{
             return;
         }
 
+        if (action.command == "combo"){
+            //TODO grafica: mostra messaggio che action.player ha usato una combo
+            let combo_tanks = this.me().useCombo(action.combo_cards, action.player)
+            if ( combo_tanks     > 0 && this.checkCard(action.combo_cards, false)){
+                this.players.find(p => p.turno == action.player).available_tanks = tanks
+            } else {
+                this.end_game("Il giocatore " + action.player + " sta barando usando una combo!")
+            }
+            return;
+        }
+
         if (action.command == "start_putting_tanks"){
             console.log("Tutti hanno pescato, posso mettere i carri armati")
+            
             start_putting_tanks(Object.keys(this.me().countries))
+            $("#unclosableModal").modal("hide")
             return;
         }
 
         if (action.command == "steal_cards"){
             if (action.player == this.me().color){
-                window.comm.sendMessage({"command": "player_cards", "player": action.winner, "cards": this.me().ps.cards})
+                window.comm.sendMessage({"command": "player_cards", "winner": action.winner, "cards": this.me().ps.cards})
             }
             return;
         }
@@ -648,35 +870,96 @@ class GlobalState{
         if (action.command == "player_cards"){
             if (action.winner == this.me().color){
                 action.cards.forEach( c => {
-                    this.me().addCard(c)
+                    this.me().ps.addCard(c)
                 })
             }
             return;
         }
 
-        if (action.command == "update_status"){
+        if (action.command == "update_status"){ 
             //viene chiamato quando un giocatore disponde dei carri prima della fase di attacco
             //è come una next che però non passa davvero il turno, fa solo aggiornare lo stato 
             //delle armate nemiche
-            this.players.forEach( p => {
 
-                if (p.turno == action.turno){
-                    p.setCountries(action.tanks)
-                }
+            //giocatore che ha mandato il comando
+            let player = this.players.find(p => p.turno == action.turno)
+
+            //controlla stato/carri disponibili
+            if (!this.checkState(action)){
+                this.end_game("Il giocatore " + action.turno + " sta barando (troppi spostamenti/aggiunta illegale di una nazione)")
+                return;
+            }
+            
+
+            let old_tanks = 0
+            Object.keys(player.countries).forEach( c => {
+                old_tanks += player.countries[c]
             })
+            let new_tanks = 0
+            Object.keys(action.tanks).forEach( c => {
+                new_tanks += action.tanks[c]
+            })
+
+            if (action.turno, new_tanks-old_tanks > 0 && !this.checkTanks(action.turno, new_tanks-old_tanks)){
+                this.end_game("Il giocatore " + action.turno + " sta barando (ha posizionato troppi carri)")
+                return;
+            }
+
+            player.setCountries(action.tanks)
+            
             this.turn = action.turn //il giocatore 1 cambia il turno, così avvisa anche gli altri
             draw_interface()
             return
         }
 
-        this.player_turn = this.turn == 0 ? 1 : ((action.turno % this.players.length) + 1)
+        if (action.command == "status_report"){
+            //Un giocatore che si era disconnesso chiede un recap; devo aggiornare:
+            // - il mio turno personale
+            // - il turno del giocatore che sta giocando ora nello stato globale
+            // - se sono il giocatore successivo, gli mando lo stato globale attuale
+            console.log("Ho ricevuto una richiesta di supporto da " + action.turno + " (il mio turno è " + this.me().turno + " e i giocatori attuali sono " + actual_players + ")")
+            // this.players.forEach( p => {
+            //     if (action.from.turno <= p.turno){
+            //         p.turno += 1
+            //     }
+            // })
 
-        if ((action.turno % this.players.length) + 1 != this.me().turno && !(action.command == "next" && this.turn == 0 && this.me().turno == 1)){
+            // this.players.find(p => p.color == action.from.color).turno = action.from.turno
+            
+            // if (this.player_turn >= action.from.turno){
+            //     this.player_turn += 1
+            // }
+
+            if (this.me().turno == nextPlayer){
+                console.log("Mando lo stato globale (me tocca)")
+                window.comm.sendMessage({"command": "status_report_answer", "gs": this.getStatus(), "to": action.turno})
+            }
+            return;
+        }
+
+        if (action.command == "status_report_answer"){
+            if (action.to == this.me().turno){
+                console.log("Ricevuto status_report! Ora posso tornare a giocare (quando sarà il mio turno)")
+                this.setStatus(action.gs)
+            }
+            return;
+        }
+
+        if (action.command == "win"){
+            //TODO grafica, etc. - a meno che non sia in endgame
+            console.log("Fine partita, un giocatore ha vinto")
+            this.end_game("Fine partita, un giocatore ha vinto con l'obbiettivo: ", action.objective)
+            
+            return;
+        }
+
+        this.player_turn = this.turn == 0 ? 1 : nextPlayer
+
+        if (nextPlayer != this.me().turno && !(action.command == "next" && this.turn == 0 && this.me().turno == 1)){
             console.log("Non è il mio turno: ha giocato " + action.turno + " e io sono " + this.me().turno)
             return
         }
-        
-        console.log("DEBUG Tocca a me fare qualcosa!")
+
         switch (action.command){
             case "draw_country":
                 console.log("Il giocatore " + action.turno + " mi ha detto di pescare roba")
@@ -698,7 +981,7 @@ class GlobalState{
                 }
                 let unknown_player = false
                 this.players.forEach( p =>{
-                    if (Object.keys(p.countries).length == 0){ //c'è un giocatore di cui non so gli stati
+                    if (Object.keys(p.countries).length == 0 && !p.killed){ //c'è un giocatore di cui non so gli stati
                         console.log("NON SO I TUOI TERRITORI " + p.color)
                         unknown_player = true
                     }
@@ -707,10 +990,23 @@ class GlobalState{
                 if (unknown_player)
                     break;
                 
+                //posso ricevere n-1 next e "ufficialmente" cominiciare il turno, ma siccome potrei non 
+                //aver ancora posizionato i carri non faccio niente
+                if (!this.me().ready)
+                    break;
+
                 console.log("Posso giocare perché tutti hanno mostrato i carri ed è il mio turno")
-                if (this.me().turno == 1)
+                
+                let firstPlayer = 1
+                while (this.players.find(p => p.turno == firstPlayer).missing)
+                    firstPlayer += 1
+                if (this.me().turno == firstPlayer)
                     this.turn += 1
-                this.me().start_turn();
+
+                if (!this.me().killed)
+                    this.me().start_turn();
+                else 
+                    window.comm.sendMessage({"command": "next", "tanks": this.me().countries, "turno": this.me().turno, "turn": this.turn})
                 
                 break;
             default:
@@ -719,12 +1015,121 @@ class GlobalState{
         }
     }
 
+    getStatus(){
+        let _players = []
+        this.players.forEach( p => {
+            _players.push({
+                "color": p.color, 
+                "turno": p.turno,
+                "countries": p.countries,
+                "missing": p.missing
+                //non devo restituire lo stato privato    
+            })
+        })
+        return {
+            "player_turn"    : this.player_turn,
+            "available_cards": this.available_cards,
+            //non restituiamo gli obiettivi rimanenti disponibili
+            "players": _players,
+            "turn": this.turn
+        }
+    }
+
+    setStatus(globalStatus){
+        console.log("Setto lo stato globale")
+
+        console.log("I giocatori per me sono ")
+        this.players.forEach( p => {p.color + ": " + p.turno})
+
+        this.player_turn = globalStatus.player_turn
+        this.available_cards = globalStatus.available_cards
+        this.turn = globalStatus.turn
+        
+        globalStatus.players.forEach( p=> {
+            console.log(p.color + ": " + p.turno)
+            
+            let player = this.players.find( x => x.turno == p.turno)
+            if (player){
+                player.setCountries(p.countries)
+                player.color = p.color
+                player.missing = p.missing
+            } else {
+                player = new Player(p.turno, p.color, 0, true)
+                player.setCountries(p.countries)
+                player.missing = p.missing
+                this.addPlayer(player)    
+            }
+        })
+
+        console.log("Adesso i giocatori sono: ")
+        this.players.forEach( p => {p.color + ": " + p.turno})
+        
+        draw_interface()
+        $("#unclosableModal").modal("hide")
+    }
+
+    end_game(reason, obj){
+        localStorage.removeItem(lobby_name)
+        window.gs = undefined
+        window.comm = undefined
+        // alert("Partita terminata: " + reason)
+        end_game_modal(reason, obj)
+        
+    }
+
     //funzione per passare il turno
     next(){
+        this.me().ready = true; 
+
+        // let missing_players = 0
+        // this.players.forEach(p => {
+        //     if (p.turno < 0)
+        //         missing_players += 1
+        // })
+        // let actual_players = this.players.length - missing_players 
+        
         console.log("GIOCATORE " + this.me().turno + ": passo il turno")
+
+
         this.player_turn = (this.me().turno % this.players.length) + 1
-        //Nota: turno è quello del giocatore, turn è quante mani sono state giocate fin'ora
-        window.comm.sendMessage({"command": "next", "tanks": this.me().countries, "turno": this.me().turno, "turn": this.turn})
+        while (this.players.find(p => p.turno == this.player_turn).missing)
+            this.player_turn += 1
+
+        let unknown_player = false
+        this.players.forEach( p =>{
+            if (Object.keys(p.countries).length == 0){ //c'è un giocatore di cui non so gli stati
+                console.log("NON SO I TUOI TERRITORI " + p.color)
+                unknown_player = true
+            }
+        })
+        if (unknown_player){
+            console.log("DEBUG non conosco ancora degli stati")
+        }
+        if (!unknown_player && this.turn == 0){
+            //Nota: normalmente la condizione "turno == 1" per cercare il primo giocatore è sbagliata
+            //perché il giocatore 1 potrebbe essersi disconnesso, quindi il vero primo turno potrebbe essere
+            // e.g. del giocatore 2; tuttavia questa condizione non vale nel turno 0, dove se un giocatore
+            // si disconnette si annulla la partita
+            // if (this.me().turno != 1){
+                //questo serve perché quando il giocatore 1 inizia a giocare non broadcasta il turno, 
+                //ma solo dopo aver giocato
+                this.turn = 1
+            // }
+            console.log("Siccome siamo al turno 0 e conosco tutti i giocatori, 1 può iniziare")
+            this.player_turn = 1 
+            draw_interface()
+        }
+
+        if (this.player_turn == this.me().turno){
+            console.log("Inizio il turno!")
+            // this.turn += 1
+            this.me().start_turn()
+            window.comm.sendMessage({"command": "update_status", "tanks": this.me().countries, "turno": this.me().turno, "turn": this.turn})
+        } else {
+            //Nota: turno è quello del giocatore, turn è quante mani sono state giocate fin'ora
+            window.comm.sendMessage({"command": "next", "tanks": this.me().countries, "turno": this.me().turno, "turn": this.turn})
+        }
+
     }
 
     /**
@@ -735,14 +1140,16 @@ class GlobalState{
         this.players.push(player)
     }
 
-    prepare_defense(attack){
+    prepare_defense(attack, _countries){
         
         //quanti carri abbiamo a disposizione?
         let nation = attack.attacked;
-        let tanks = this.me().countries[nation]
+        let tanks = _countries[nation]
 
-        //TODO mostra messaggio "tizio sta attaccando con x carri"
+        //mostra messaggio "tizio sta attaccando con x carri"
         console.log("Attenzione! " + attack.attacking + " sta attaccando " + attack.attacked + "!")
+        $("#text_status").html("<b>" + attack.attacked + "</b> sotto attacco da <b>" + attack.attacking + "</b>!")
+
         window.attacking_nation = attack.attacking
         window.attacked_nation  = attack.attacked
         enable_dices(false, tanks)
@@ -772,6 +1179,7 @@ class GlobalState{
 
         console.log("L'attacco ha perso " + attack_losses)
         console.log("La difesa ha perso " + defense_losses)
+
 
         let countryLost = false
         let attackingPlayer = null;
@@ -828,23 +1236,35 @@ class GlobalState{
             }
 
             //controlla se ho ucciso l'avversario, perché nel caso deve darmi le sue carte - se non siamo arrivati al 4 turno
-            if (attackedPlayer.countries.length == 0 && this.turn > 4)
+            if (attackedPlayer.killed && this.turn > 4){
+                attackedPlayer.killedby = attackingPlayer.color
                 window.comm.sendMessage({"command": "steal_cards", "player": attackedPlayer.color, "winner": attackingPlayer.color})
+            }
 
             //devo aggiornare la grafica - stati e eventuali carte pescate
             draw_interface()
-            if (attackingPlayer.turno == this.me().turno)
+            if (attackingPlayer.turno == this.me().turno){
                 $("#next-btn").prop("disabled", false)
+                $("#move_btn").prop("disabled", false)
+
+            }
+            let status_country = this.me() == attackingPlayer ? "conquistato" : "perso"
+            $("#text_status").html("L'attacco ha perso: <b>" + attack_losses + "</b> armate <br/> la difesa ha perso: <b>" + defense_losses + "</b> armate; territorio <b>" + status_country + "</b>!")
 
             //controlliamo se abbiamo vinto
-            if (this.me().checkWin())
+            if (this.me().checkWin()){
                 window.comm.sendMessage({"command": "win", "objective": this.me().ps.getObjective()})
+                this.end_game("Hai vinto!")
+            }
 
         } else {
             draw_interface()
-            if (attackingPlayer.turno == this.me().turno)
+            if (attackingPlayer.turno == this.me().turno){
                 $("#next-btn").prop("disabled", false)
+                $("#move_btn").prop("disabled", false)
 
+            }
+            $("#text_status").html("L'attacco ha perso: <b>" + attack_losses + "</b> armate <br/> la difesa ha perso: <b>" + defense_losses + "</b> armate")
 
         }
 
@@ -870,6 +1290,12 @@ class PrivateState{
     addCard(card){
         
         this.cards.push(card)
+
+        let data = JSON.parse(localStorage.getItem(lobby_name))
+        
+        data.ps.cards.push(card)
+
+        localStorage.setItem(lobby_name, JSON.stringify(data))
     }
 
     /**
@@ -877,23 +1303,44 @@ class PrivateState{
      * @param {string} card 
      */
     removeCard(card){        
+        console.log("Lunghezza delle carte: " + cards.countries.length)
         this.cards.splice(this.cards.findIndex( e => e.nome == card), 1)
+        console.log("Ho eliminato una carta; lunghezza delle carte: " + cards.countries.length)
+
+        let data = JSON.parse(localStorage.getItem(lobby_name))
+        
+        data.ps.cards.splice(data.ps.cards.findIndex( c => c == card))
+        console.log("Ho eliminato una carta; lunghezza delle carte: " + cards.countries.length)
+
+        localStorage.setItem(lobby_name, JSON.stringify(data))
     }
 
     setObjective(obj){
         this.objective = obj
+
+        let data = JSON.parse(localStorage.getItem(lobby_name))
+        data.ps.obj = obj
+        data.ps.cards = []
+        localStorage.setItem(lobby_name, JSON.stringify(data))
     }
 
     getObjective(){
         return this.objective
     }
 
-    useCombo(cards2use){
+    //questa funzione può essere chiamata su di me oppure 
+    //posso passare un parametro 'player' per verificare la 
+    //validità della combo dichiarata da player
+    useCombo(cards2use, player){
         //restituisce il numero di carri dati dalla combo
         //o 0 se non è valida
         let cav = 0
         let fan = 0
         let can = 0
+        let bon = 0
+
+        console.log("Carte da usare per la combo: ")
+        console.log(cards2use)
 
         cards2use.forEach(card => {
             card = cards.countries.find(e => e.nome == card)
@@ -908,12 +1355,14 @@ class PrivateState{
                     can += 1
                     break;
                 case "bonus":
-                    b += 1
+                    bon += 1
                     break;
                 default:
                     break;
             }
         })
+
+        console.log("fan: "+ fan +" cav: "+ cav +" can: "+ can +" bonus:" + bon)
 
         let b = 0
         if (can == 3)
@@ -921,33 +1370,45 @@ class PrivateState{
         if (fan == 3)
             b = 6
         if (cav == 3)
-            b = 0
+            b = 8
         if (cav == 1 && fan == 1 && can == 1)
             b = 10
-        if (b == 1 && (cav == 2 || can == 2 || fan == 2))
+        if (bon == 1 && (cav == 2 || can == 2 || fan == 2))
             b = 12
         
-        if (b > 0){
-            cards2use.forEach(card => {
-                if (this.cards.find(e => e.nome == card))
-                    b += 2
-            })
-        }
-
-        if (b > 0){
-            // se è una combo, diamo i carriarmati corrispondenti e segnaliamolo agli altri giocatori, 
-            // riaggiungiamo le carte al mazzo
-            cards2use.forEach( c => {
-                this.removeCard()
-
-                window.gs.available_cards.append(cards.countries.find(e => e.nome == c))
-            })
-
-            window.gs.me().tanks += b
-
-            window.comm.sendMessage({"command": "available_cards", "cards": window.gs.available_cards})
-            //TODO questo segnala solo che ci sono delle carte disponibili, non che il giocatore ha usato una combo/quante armate ha ricevuto
+        if (!player){
+            if (b > 0){
+                cards2use.forEach(card => {
+                    if (window.gs.me().countries[card]){
+                        b += 2
+                        console.log("Che fortuna, ho " + card + ": 2 armate extra per la combo!")
+                    }
+                })
             
+                // se è una combo, diamo i carriarmati corrispondenti e segnaliamolo agli altri giocatori, 
+                // riaggiungiamo le carte al mazzo
+                cards2use.forEach( c => {
+                    this.removeCard(c)
+
+                    window.gs.available_cards.push(cards.countries.find(e => e.nome == c))
+                })
+
+                window.gs.me().tanks += b
+
+                console.log("C-C-Combo (forse)! Ottieni + " + b + " armate")
+
+                window.comm.sendMessage({"command": "combo", "cards": window.gs.available_cards, "combo_cards": cards2use, "player": window.gs.me().turno})
+                //TODO questo segnala solo che ci sono delle carte disponibili, non che il giocatore ha usato una combo/quante armate ha ricevuto
+                
+            }
+        } else {
+            if (b > 0){
+                cards2use.forEach(card => {
+                    if (window.gs.players.find(p => p.turno == player).countries[card]){
+                        b += 2
+                    }
+                })
+            }
         }
 
         return b
