@@ -1,0 +1,63 @@
+<html>
+    <head>
+        <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+        <script src="https://cdn.socket.io/4.4.0/socket.io.min.js" integrity="sha384-1fOn6VtTq3PWwfsOrk45LnYcGosJwzMHv+Xh/Jx5303FVOXzEnw0EpLv30mtjmlj" crossorigin="anonymous"></script>
+    </head>
+
+    <body>
+
+        <main class="container" role="main">
+                
+            <h1>Risiko!</h1>
+            <h3>Crea una lobby o entra in una esistente.</h3>
+            
+            <!-- TODO Richiesta ajax per lobby esistenti, e tabella con link che rimandano a /lobby/{id} -->
+            <!-- TODO Il numero di giocatori connessi nella lobby è dato da socketio -->
+            <!-- TODO Controllo che il numero di giocatori nella lobby non superi il massimo -->
+            <table class="table" id="table">
+                <thead>
+                    <th>Nome</th>
+                    <th>Giocatori online</th>
+                    <th>Dimensione lobby</th>
+                    <th>Sicurezza</th>
+                    <th>Vai alla lobby</th>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+
+            <hr>
+            <h4> Crea una nuova lobby: </h4>
+
+            <!-- TODO bottone per creare lobby (parametri: nome, password [opzionale] e numero giocatori 2-6) -->
+            <!-- TODO numero massimo di lobby: 10 -->
+            <form method="POST" id="newlobby">
+                <div class="form-group">   
+                    <label>Inserisci nome della lobby: </label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>Inserisci numero di giocatori</label>
+                        <select required name="number">
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Inserisci password [opzionale]</label>
+                    <input type="text" name="password">
+                </div>
+                <button type="submit" class="btn btn-primary">Crea lobby</button>
+
+            </form>
+        </main>
+    </body>
+    <footer>
+        <script src="js/index.js"></script>
+    </footer>
+</html>

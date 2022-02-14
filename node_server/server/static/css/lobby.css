@@ -1,0 +1,201 @@
+#nations {
+    /* position: absolute; */
+    /* top: 0px; */
+    /* width: 1800px;
+    height: 1300px;  */
+
+    width: 96%;
+    min-height: 1300px; 
+
+    background-image: url("../images/map_nations.png");
+    background-size: 100%;
+    background-repeat: no-repeat;
+    border: 1px solid black;
+
+}
+
+.nation {
+    position: absolute;
+    /* width: 125px; 
+    height: 85px; 
+    line-height: 85px; */
+    width: 7%; 
+    height: 5%; 
+    
+    border: 1px solid white;
+    text-align: center;
+    vertical-align: middle;
+
+}
+
+.carri {
+    background-image: url("https://cdn-icons-png.flaticon.com/512/99/99404.png");
+    width: 30px; 
+    height: 30px;
+    background-size: 30px;
+}
+
+.nation-name {
+    color: white;
+    /* display: none; */
+}
+
+/*#groenlandia {
+    width: 250px;
+    height: 170px;
+}
+
+#cina {
+    width: 220px;
+    height: 140px;
+}*/
+
+.plus img, .minus img, .tank_img img {
+    /* vertical-align: middle; */
+    height: 25%;
+}
+
+.tank_setter {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.65);
+}
+
+#dashboard{
+    width: 100%;
+    height: 25%;
+    bottom: 0px;
+    border: solid;
+    background-color: rgb(185, 146, 72);
+}
+
+#obj_dashboard img {
+    width: 85%;
+}
+
+
+#tank_div {
+    position: absolute;
+    display: inline-block;
+    width: 10%;    
+}
+
+#tank_counter_dashboard{
+    font-size: 20px;
+    background-color: white;
+}
+
+#obj_dashboard { /* span */
+    position: absolute;
+    display: inline-block;
+    width: 10%;   
+    left: 7%;
+}
+
+span.country_card {
+    position: relative;
+    display: inline-block;
+    width: 30%;
+}
+
+span.country_card img{
+    width: 100%;
+}
+#cards_dashboard{
+    position: absolute;
+    
+    overflow-x: scroll;
+    display: inline-block;
+    width: 25%;
+    white-space: nowrap;
+    left: 16%;
+}
+
+#combo_span {
+    position: absolute;
+
+    display: inline-block;
+    width: 5%;
+    left: 42%;
+
+    bottom: 20%;
+}
+
+#attack_span {
+    position: absolute;
+
+    display: inline-block;
+    width: 5%;
+    left: 42%;
+
+    bottom: 13%;
+
+}
+
+#move_span {
+    position: absolute;
+
+    display: inline-block;
+    width: 5%;
+    left: 42%;
+
+    bottom: 6%;
+}
+
+#dices { /*span*/
+    position: absolute;
+
+    display: inline-block;
+    width: 15%;
+    left: 54%;
+}
+
+#throw_span {
+    position: absolute;
+
+    display: inline-block;
+    width: 5%;
+    left: 69%;
+    
+    bottom: 15%;
+
+}
+
+#text_status { /* div */ 
+    position: absolute;
+    right: 10%;
+    width: 15%;
+    bottom: 1%;
+    height: 23%;
+    text-align: center;
+    font-size: 1em;
+    border: solid;
+    background-color: white;
+}
+
+#next {
+    position: absolute;
+
+    display: inline-block;
+    width: 5%;
+    right: 2%;
+
+    bottom: 15%;
+
+}
+
+.disabled {
+    opacity: 0.5;
+}
+
+image:hover{
+    cursor: pointer;
+}
+
+.cls-4:hover{
+    cursor: pointer;
+}
+
+.color-selection {
+    margin: 3%;
+}
