@@ -416,6 +416,7 @@ function throw_dice(){
     //comunica esito dei dadi agli altri
     if (attack){
         window.gs.attack_dices = _numbers
+        window.gs.me().attacking = true
         window.comm.sendMessage({"command": "attack", "values": _numbers, "attacking": window.attacking_nation, "attacked": window.attacked_nation, "from": window.gs.me().turno})
 
         $("#next-btn").prop("disabled", true)
@@ -427,6 +428,8 @@ function throw_dice(){
         window.comm.sendMessage(defense)
         window.gs.defend(defense)
     }
+
+    $(".cls-4").off('click');
     
     
 }
@@ -613,35 +616,44 @@ function final_phase_move(){
 function setCountryForMove(country){
     let country_name = $(country).prop("id")
 
+    let move_from_text = window.move_from ? $(`#${window.move_from}`).siblings(".territorio").text() : ""
+    let move_to_text = window.move_to ? $(`#${window.move_to}`).siblings(".territorio").text() : ""
+    
+
     if (window.gs.me().countries[country_name]){
         if (window.move_from == country_name){
             
             deselectCountryMovePhase(country_name)
-            $("#text_status").html("Da: <b>" + window.move_from + "</b> a: <b>" + window.move_to + "</b>")
+
+
+            $("#text_status").html("Da: <b>" + move_from_text + "</b> a: <b>" + move_to_text + "</b>")
             
             return;
         }
         if (window.move_to == country_name){
             deselectCountryMovePhase(country_name)
 
-
-            $("#text_status").html("Da: <b>" + window.move_from + "</b> a: <b>" + window.move_to + "</b>")
+            $("#text_status").html("Da: <b>" + move_from_text + "</b> a: <b>" + move_to_text + "</b>")
             return;
         }
 
         if (window.move_from && window.move_to){
             console.log("Devi prima deselezionare un territorio!")
-            $("#text_status").html("Da: <b>" + window.move_from + "</b> a: <b>" + window.move_to + "</b>")
+
+            $("#text_status").html("Da: <b>" + move_from_text + "</b> a: <b>" + move_to_text + "</b>")
             return;
         }
         
         if (!window.move_from){
             console.log("Imposto " + country_name + " come stato from")
             window.move_from = country_name
+            move_from_text = window.move_from ? $(`#${window.move_from}`).siblings(".territorio").text() : ""
+
             window.original_tanks_from = parseInt($($(`#${window.move_from}`).siblings()[1]).text())
         } else {
             console.log("Imposto " + country_name + " come stato to")
             window.move_to = country_name
+            move_to_text = window.move_from ? $(`#${window.move_to}`).siblings(".territorio").text() : ""
 
             window.original_tanks_to = parseInt($($(`#${window.move_to}`).siblings()[1]).text())
 
@@ -657,7 +669,7 @@ function setCountryForMove(country){
             $("#throw_dices").prop("enabled", false)
         }
 
-        $("#text_status").html("Da: <b>" + window.move_from + "</b> a: <b>" + window.move_to + "</b>")
+        $("#text_status").html("Da: <b>" + move_from_text + "</b> a: <b>" + move_to_text + "</b>")
 
     }
 
@@ -669,6 +681,7 @@ function deselectCountryMovePhase(country_name){
 
         console.log("Lo stato to è " + window.move_to)
 
+        //TODO
         $($(`#${window.move_from}`).siblings()[1]).text(window.original_tanks_from)
         window.gs.me().countries[window.move_from] = window.original_tanks_from
         if (window.move_to){
@@ -729,7 +742,7 @@ function attack_phase(){
     $("#text_status").append("<div>Fase di attacco! Clicca su due territori, poi clicca sui dadi che vuoi usare</div>")
     
     $(".cls-4").off('click');
-    $(".cls-4").click( e => { let dices = setCountryForAttack(e.target); if (dices > 0 ) enable_dices(true, dices) ;})
+    $(".cls-4").click( e => { let dices = setCountryForAttack(e.target); if (dices > 0 ) enable_dices(true, dices) ; else disable_dices(true) ;})
 
     //la fase di attacco inizia dopo aver posizionato i carri, quindi devo segnalare agli
     //avversari le nuove quantità di carri sui miei territori
@@ -781,7 +794,9 @@ function setCountryForAttack(country){
         }
     }
 
-    $("#text_status").html("Da: <b>" + window.attacking_nation + "</b> a: <b>" + window.attacked_nation + "</b>")
+    let attacking_nation_text = window.attacking_nation ? $(`#${window.attacking_nation}`).siblings(".territorio").text() : ""
+    let attacked_nation_text = window.attacked_nation ? $(`#${window.attacked_nation}`).siblings(".territorio").text() : ""
+    $("#text_status").html("Da: <b>" + attacking_nation_text + "</b> a: <b>" + attacked_nation_text  + "</b>")
     
 
 

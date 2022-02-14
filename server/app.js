@@ -2,6 +2,7 @@
 var express = require('express');
 var app = express();
 const bodyParser = require('body-parser');
+//const { Socket } = require("socket.io");
 const http = require('http');
 const { dirname } = require('path');
 const server = http.createServer(app);
@@ -21,7 +22,29 @@ var lobbylist = []
 /** socket.io code **/
 io.on('connection', (socket) => { 
   console.log(`User ${socket.id} connected`);
-  //TODO controlla i timestamp delle lobby, cancella quelle che hanno superato il keep_alive
+  //controlla i timestamp delle lobby, cancella quelle che hanno superato il keep_alive
+
+  lobby2delete = []
+  lobbylist.forEach( lobby => {
+    let now = Date.now()
+    let diff = (now - password_timestamp[lobby.name].timestamp)/1000
+
+    if (lobby.numero_giocatori == 0){
+      if (diff >= KEEP_ALIVE_NO_PLAYERS){
+        lobby2delete.push(lobby.name)
+      }
+    } else if (lobby.numero_giocatori < lobby.giocatori_massimi){
+      if (diff >= KEEP_ALIVE_PLAYERS){
+        lobby2delete.push(lobby.name)
+      }
+    }
+  })
+
+  lobby2delete.forEach(name => {
+    lobbylist.splice(lobbylist.find(l => l.name == name), 1)
+    delete password_timestamp[name]
+
+  })
 
   socket.emit("lobbylist", lobbylist)
 
@@ -72,11 +95,27 @@ io.on('connection', (socket) => {
     
   })
 
+  socket.on("deletelobby", (name) => {
+    console.log("Elimino la lobby ", name)
+    try { //più giocatori possono provare a eliminare la lobby
+      lobbylist.splice(lobbylist.find(l => l.name == name), 1)
+      delete password_timestamp[name]
+      socket.emit("lobbylist", lobbylist)
+
+    } catch (e){
+
+    }
+  })
+
   socket.on("joingroup", (details) => {
 
     console.log(`User ${socket.id} joining room ${details["name"]}`)
     
-    lobbylist.find( l => l.name == details["name"]).numero_giocatori += 1
+    let lobby = lobbylist.find( l => l.name == details["name"])
+    if (lobby)
+      lobby.numero_giocatori += 1
+    else 
+      return;
     
     io.sockets.emit("lobbylist", lobbylist)
 
@@ -90,29 +129,31 @@ io.on('connection', (socket) => {
     }
   })
 
-  socket.on("offer", (data) => {
+  socket.on("peerid", (data) => {
+    console.log("peerid: invio " + data.peerid + " a " + data.to)
     // socket.rooms.forEach(room => {
     //   const r = {"data": data, "id": socket.id}
     //   io.sockets.in(room).emit("session_desc", r);
     // })
-    const r = {"data": data["offer"], "id": socket.id, "player": data["player"]} 
-    io.to(data["to"]).emit("session_desc", r)
-  })
-
-  socket.on("answer", (data) => {
-    // const r = {"data": data, "id": socket.id}
-    // socket.rooms.forEach(room => {
-    //   io.sockets.in(room).emit("reply", r);
-    // })
-    const r = {"data": data["answer"], "id": socket.id, "player": data["player"]}
-    io.to(data["to"]).emit("reply", r)
+    const r = {"peerid": data["peerid"], "from": socket.id} 
+    io.to(data["to"]).emit("connection_offer", r)
   })
 
 });
 
 /** express server code **/
 
-app.use(express.static('static'));
+app.get("/", function(req, res){
+  console.log("Richiesta per la index")
+  let theDate = new Date("2/11/2022 21:00:00")
+  let now = Date.now();
+
+  if (now < theDate){
+    res.sendFile(__dirname + "/static/html/countdown.html")
+    return;
+  } else 
+    res.sendFile(__dirname + "/static/index.html")
+})
 
 app.get('/newlobby', function(req, res){
   console.log(req.params)
@@ -168,6 +209,9 @@ app.post('/lobby', function(req, res){
   } else
     res.sendStatus(400) 
 })
+
+
+app.use(express.static('static'));
 
 const port = 3000
 

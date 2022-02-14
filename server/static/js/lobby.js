@@ -1,3 +1,4 @@
+
 const socket = io()
 
 // const configuration = {
@@ -18,11 +19,11 @@ var tanks = 35 - (players_in_lobby - 3)*5 //regola per calcolare il numero di ca
 //però arrivati a fine partita, vedendo che ci sono due giocatori con lo stesso obiettivo la
 //partita sarà annullata
 
-socket.emit("joingroup", {"name": lobby_name, "password": game.password ? game.password : ""})
-
+var comm = new Communication(players_in_lobby, socket); window.comm = comm;
 var me = new Player(1, "", tanks, false);
 var gs = new GlobalState(me); window.gs = gs;
-var comm = new Communication(players_in_lobby, socket); window.comm = comm;
+
+socket.emit("joingroup", {"name": lobby_name, "password": game.password ? game.password : ""})
 
 socket.on("user_joined", (id) => {
     if (socket.id == id){
@@ -58,28 +59,16 @@ socket.on("user_joined", (id) => {
     }
 });
 
-socket.on("session_desc", async (offer_id) => {
-    data = offer_id["data"]
-    if (offer_id["id"] == socket.id){
-        console.log( `Ho ricevuto un'offerta da me stesso (${socket.id}), la ignoro`)
+socket.on("connection_offer", async (data) => {
+    console.log("Ricevuto peerid, devo iniziare la procedura di collegamento...")
+    if (data.from == socket.id){
+        console.log("Ricevuta offerta da me stesso, la ignoro")
     } else {
-        //session_desc(offer_id)
-        comm.session_desc(offer_id)
-        
+        comm.connection_offer(data)    
     }
+    
 })
 
-socket.on("reply", (answer_id) => {
-    data = answer_id["data"]
-    if (answer_id["id"] == socket.id){
-        console.log(`Ho ricevuto una risposta da me stesso (${socket.id}), la ignoro`)
-    } else {
-        console.log(`Ho ricevuto una risposta da ${answer_id["id"]} ad una mia offerta`)
-        //prendi una connessione da myconnections
-        comm.reply(answer_id)
-
-    }
-})
 
 
 

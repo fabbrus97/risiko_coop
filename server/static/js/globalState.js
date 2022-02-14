@@ -1,3 +1,4 @@
+
 const cards = {
     "continents": {
         "europe": {"countries": ["islanda", "gran_bretagna", "europa_occ", 
@@ -118,6 +119,11 @@ class Player {
 
         this.countries = {}
         this.ps = new PrivateState();
+
+        this.combo_tanks = 0 //contatore dei carri dati da una combo
+
+        this.attacking = true; //booleano per indicare che ho iniziato un attacco - serve se un giocatore si disconnette
+
     }
 
     setCountries( countries ){ //gli stati che ha un giocatore e il numero di carri
@@ -495,10 +501,10 @@ class Player {
             let enemy = window.gs.players.find(p => p.color == this.ps.getObjective().kill && p.color != this.color)
             //se il nemico esiste vinco se non ha più territori
             if (enemy){
-                //TODO questo è sbagliato perché se i verdi non hanno territori allora vinco
+                //Supp. io devo ucciedere i verdi; se i verdi non hanno territori allora vinco
                 //MA vuol dire che se un altro giocatore fa l'ultima uccisione vinco io, cosa che deve succedere
                 //solo se IO ho fatto l'ultima uccisione
-                // win = Object.keys(enemy.countries).length == 0
+                //quindi bisogna anche controllare chi ha ucciso il giocatore:
                 win = enemy.killed && enemy.killedby == this.color
                 if (!win && enemy.killed){
                     //il nemico è morto, ma non ho vinto: qualcun'altro lo ha ucciso
@@ -626,15 +632,24 @@ class GlobalState{
 
     //funzione per controllare che un avversario non stia barando
     checkCard(card, objective){
+        console.log("Devo controllare una carta (obiettivo: " + objective + ")")
         if (objective){ //controlliamo una carta obiettivo
             if (window.gs.me().ps.getObjective() == card)
                 return false; //l'avversario bara, ha il mio stesso obiettivo
         } else {
-            for (c in window.gs.me().ps.cards){
-                if ( c == card)
+            console.log("Le carte che devo controllare sono:")
+            console.log(card)
+            console.log("Le MIE carte sono:")
+            console.log(window.gs.me().ps.cards)
+
+            //In questo caso "card" è in realtà una lista di carte
+            for (let i in card){
+                if ( window.gs.me().ps.cards.find( c => c.nome == card[i].nome ))
                     return false;
             }
         }
+
+        return true
     }
 
     //funzione per controllare che un avversario non stia barando
@@ -647,9 +662,52 @@ class GlobalState{
     checkTanks(player_turn, tanks){ 
         console.log("Controllo i carri del giocatore " + player_turn + " che ha usato " + tanks)
         var player = this.players.find(p => p.turno == player_turn)
-        let available_tanks = parseInt(Object.keys(player.countries).length/3)
+        //nota: i carri che ha effettivamente un giocatore sono quelli dati dai territori/3
+        // + eventualmente bonus continenti
+        // + eventuali carri disponibili - variabile che viene inizializzata se il giocatore usa una combo
+        console.log("I territori del giocatore sono:")
+        console.log(player.countries)
+        let available_tanks = parseInt(Object.keys(player.countries).length/3) + player.checkContinents() + player.combo_tanks
         console.log("I carri che il giocatore ha a disposizione sono " + available_tanks)
+        player.combo_tanks = 0
         return available_tanks == tanks
+    }
+
+    checkDices(defense){
+
+        for (let p in this.players){
+            let player = this.players[p]
+
+            if (player.countries[defense.attaking]){
+                //controlliamo che i valori dei dadi siano legali
+                for (let v in this.attack_dices){
+                    let dice = this.attack_dices[v]
+                    if (dice > 6)
+                        return player.turno
+                }
+
+                //ho trovato lo stato del giocatore attaccante
+                if (!(player.countries[defense.attacking] > this.attack_dices.lengths)){
+                    //se l'attacco NON ha tante armate quante usate nell'attacco + 1 sta barando
+                    return player.turno
+                }
+            }
+            //simmetrico per la difesa
+            if (player.countries[defense.attaked]){
+                for (let v in defense.values){
+                    let dice = defense.values[v]
+                    if (dice > 6)
+                        return player.turno
+                }
+
+                if (!(player.countries[defense.attacked] >defense.values)){
+                    return player.turno
+                }
+            }
+            
+        }
+
+        return ""
     }
 
     setColor(){
@@ -758,7 +816,7 @@ class GlobalState{
                 })
 
                 console.log("Controllo carri del nemico: old/new:" + old_tanks + " " + new_tanks)
-                if (action.turno, new_tanks-old_tanks > 0 && !this.checkTanks(action.turno, new_tanks-old_tanks)){
+                if (new_tanks-old_tanks > 0 && !this.checkTanks(action.turno, new_tanks-old_tanks)){
                     this.end_game("Il giocatore " + action.turno + " sta barando (ha posizionato troppi carri)")
                     return;
                 }
@@ -843,10 +901,12 @@ class GlobalState{
 
         if (action.command == "combo"){
             //TODO grafica: mostra messaggio che action.player ha usato una combo
-            let combo_tanks = this.me().useCombo(action.combo_cards, action.player)
-            if ( combo_tanks     > 0 && this.checkCard(action.combo_cards, false)){
-                this.players.find(p => p.turno == action.player).available_tanks = tanks
+            let combo_tanks = this.me().ps.useCombo(action.combo_cards, action.player)
+            if ( combo_tanks > 0 && this.checkCard(action.combo_cards, false)){
+                this.players.find(p => p.turno == action.player).combo_tanks = combo_tanks
+                
             } else {
+                
                 this.end_game("Il giocatore " + action.player + " sta barando usando una combo!")
             }
             return;
@@ -861,8 +921,19 @@ class GlobalState{
         }
 
         if (action.command == "steal_cards"){
+            if (!(this.turn >= 4)){
+                this.end_game("Il giocatore sta barando (non si possono rubare le carte prima del 4 turno")
+                return
+            }
+
+            if (!(this.players.find(player => player.color == action.player).killedby == action.winner)){
+                this.end_game("Il giocatore " + action.winner + " sta barando (Vuol rubare le carte ad un giocatore che non ha ucciso")
+                return
+            }
+
             if (action.player == this.me().color){
                 window.comm.sendMessage({"command": "player_cards", "winner": action.winner, "cards": this.me().ps.cards})
+                this.me().ps.cards = []
             }
             return;
         }
@@ -900,7 +971,7 @@ class GlobalState{
                 new_tanks += action.tanks[c]
             })
 
-            if (action.turno, new_tanks-old_tanks > 0 && !this.checkTanks(action.turno, new_tanks-old_tanks)){
+            if (this.turn != 0 && new_tanks-old_tanks > 0 && !this.checkTanks(action.turno, new_tanks-old_tanks)){
                 this.end_game("Il giocatore " + action.turno + " sta barando (ha posizionato troppi carri)")
                 return;
             }
@@ -946,7 +1017,6 @@ class GlobalState{
         }
 
         if (action.command == "win"){
-            //TODO grafica, etc. - a meno che non sia in endgame
             console.log("Fine partita, un giocatore ha vinto")
             this.end_game("Fine partita, un giocatore ha vinto con l'obbiettivo: ", action.objective)
             
@@ -1022,9 +1092,14 @@ class GlobalState{
                 "color": p.color, 
                 "turno": p.turno,
                 "countries": p.countries,
-                "missing": p.missing
+                "missing": p.missing,
+                "killed": p.killed,
+                "killedby": p.killedby,
+                "combo_tanks": p.combo_tanks,
+                "tanks": p.tanks,
                 //non devo restituire lo stato privato    
             })
+    
         })
         return {
             "player_turn"    : this.player_turn,
@@ -1047,16 +1122,25 @@ class GlobalState{
         
         globalStatus.players.forEach( p=> {
             console.log(p.color + ": " + p.turno)
+
             
             let player = this.players.find( x => x.turno == p.turno)
             if (player){
                 player.setCountries(p.countries)
                 player.color = p.color
                 player.missing = p.missing
+
+                player.killed = p.killed
+                player.killedyby = p.killedby
+
             } else {
                 player = new Player(p.turno, p.color, 0, true)
                 player.setCountries(p.countries)
                 player.missing = p.missing
+
+                player.killed = p.killed
+                player.killedyby = p.killedby
+
                 this.addPlayer(player)    
             }
         })
@@ -1074,6 +1158,8 @@ class GlobalState{
         window.comm = undefined
         // alert("Partita terminata: " + reason)
         end_game_modal(reason, obj)
+        
+        socket.emit("deletelobby", lobby_name)
         
     }
 
@@ -1093,7 +1179,7 @@ class GlobalState{
 
         this.player_turn = (this.me().turno % this.players.length) + 1
         while (this.players.find(p => p.turno == this.player_turn).missing)
-            this.player_turn += 1
+            this.player_turn = (this.player_turn % this.players.length) + 1
 
         let unknown_player = false
         this.players.forEach( p =>{
@@ -1148,7 +1234,7 @@ class GlobalState{
 
         //mostra messaggio "tizio sta attaccando con x carri"
         console.log("Attenzione! " + attack.attacking + " sta attaccando " + attack.attacked + "!")
-        $("#text_status").html("<b>" + attack.attacked + "</b> sotto attacco da <b>" + attack.attacking + "</b>!")
+        $("#text_status").html("<b>" + $(`#${attack.attacked}`).siblings(".territorio").text() + "</b> sotto attacco da <b>" + $(`#${attack.attacking}`).siblings(".territorio").text() + "</b>!")
 
         window.attacking_nation = attack.attacking
         window.attacked_nation  = attack.attacked
@@ -1157,8 +1243,24 @@ class GlobalState{
     }
 
     defend(defense){
+
+        this.me().attacking = false
+
         console.log("DEBUG inizio difesa: adesso ho da disporre " + this.me().tanks + " armate")
         
+        //controllo bari: controlliamo che i dadi di attacco e di difesa siano il numero giusto
+        let cheater = this.checkDices(defense)
+        if (cheater.length > 0){
+            this.end_game("Durante l'attacco " + cheater + " ha barato tirando più dadi del dovuto")
+            return
+        }
+
+        if (!adjacency[defense.attacking].find( country => country == defense.attacked)){
+            this.end_game("Il giocatore sta barando (attacco da una nazione non confinante)!")
+            return
+        }
+
+
         //stabiliamo anzitutto chi ha vinto - ordiniamo al contrario
         this.attack_dices.sort((a, b) => b - a) // [6, 4, 2]
         defense.values.sort((a, b) => b - a)    // [6, 3]
@@ -1238,6 +1340,7 @@ class GlobalState{
             //controlla se ho ucciso l'avversario, perché nel caso deve darmi le sue carte - se non siamo arrivati al 4 turno
             if (attackedPlayer.killed && this.turn > 4){
                 attackedPlayer.killedby = attackingPlayer.color
+                
                 window.comm.sendMessage({"command": "steal_cards", "player": attackedPlayer.color, "winner": attackingPlayer.color})
             }
 
@@ -1398,7 +1501,6 @@ class PrivateState{
                 console.log("C-C-Combo (forse)! Ottieni + " + b + " armate")
 
                 window.comm.sendMessage({"command": "combo", "cards": window.gs.available_cards, "combo_cards": cards2use, "player": window.gs.me().turno})
-                //TODO questo segnala solo che ci sono delle carte disponibili, non che il giocatore ha usato una combo/quante armate ha ricevuto
                 
             }
         } else {

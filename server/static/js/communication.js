@@ -23,7 +23,7 @@ class Communication{
         console.log(msg)
         if (msg.command == "announce_turn"){
             console.log("È un giocatore " + msg.id + " che pubblica il suo turno (" + msg.turno + ")")
-            window.comm.peerconnections.find( p => p.remotePeer == msg.id).turno = msg.turno
+            window.comm.peerconnections.find( p => p.socketid == msg.id).turno = msg.turno
 
             //questa condizione serve perché se un giocatore annuncia il proprio turno  in fase di collegamento, allora non ho ancora players in 
             //window.gs; ma il turno potrebbe essere anche annunciato se un giocatore si sta ricollegando e in quel caso devo modificare la variabile
@@ -32,7 +32,7 @@ class Communication{
             if (p)
                 p.missing = false
            
-            if (window.comm.peerconnections.find( p => (p.channel && p.channel.readyState != "open") || !p.turno) || window.gs.players.length == players_in_lobby){
+            if (window.comm.peerconnections.find( p => (p.conn && !p.conn.open) || !p.turno) || window.gs.players.length == players_in_lobby){
                 console.log("Comm: CI MANCA UN TURNO! o li abbiamo tutti (announce_turn outdated)")
                 return; //ci manca il turno di qualche giocatore oppure abbiamo già tutti i turni
             }
@@ -66,113 +66,177 @@ class Communication{
         console.log("Devo mandare " + this.peerconnections.length + " messaggi")
         for (let i in this.peerconnections){
             var tries = 10000;
-            while (this.peerconnections[i].channel && this.peerconnections[i].channel.readyState != "open" && tries > 0){
+            while (this.peerconnections[i].conn && !this.peerconnections[i].conn.open && tries > 0){
                 tries = tries - 1;
             }
             if (tries > 0)
-                this.peerconnections[i].channel.send(JSON.stringify(msg))
+                this.peerconnections[i].conn.send(JSON.stringify(msg))
         }
     }
 
     //devo farlo se un nuovo utente entra nella lobby
     async make_offer(id){
 
-        
-        if (! this.queue.find( p => p == id)){
-            console.log("coda: metto in coda " + id)
-            this.queue.push(id)
-        } else {
-            console.log("Coda: l'utente " + id + " è già in coda, non sarà riaggiunto")
-            return
-        }
+        const localConnection = new Peer({host: "arianna.cs.unibo.it", port: 9000, config: {iceServers: [{
+            urls: ['turn:arianna.cs.unibo.it:3478'],
+            username: 'simone',
+            credential: 'KXGmwR52QNE'
+        }, {
+          urls: ['stun:arianna.cs.unibo.it'],
+          username: 'simone',
+          credential: 'KXGmwR52QNE'}]}}); 
 
-        console.log("Coda: Adesso la coda è lunga " + this.queue.length)
-        if (this.queue.length > 1){
-            console.log("Coda: Sto gestendo un utente, al momento non posso fare un'offerta")
-            return;
-        }
-        console.log("Coda: posso procedere con l'invio dell'offerta")
+        this.peerconnections.push(localConnection)
 
-        const localConnection = new RTCPeerConnection()
+        localConnection.socketid = id
 
-        localConnection.remotePeer = id
+        localConnection.on('open', function(peerid) {
+            console.log('My peer ID is: ' + peerid);
+            //allochiamo un oggetto Peer apposta per id, e diciamo a id di collegarsi a noi
+            //che siamo peerid
+            socket.emit("peerid", {"peerid": peerid, "to": id})
+        });
 
-        localConnection.onicecandidate = e =>  {
-            console.log(" NEW ice candidnat!! on localconnection reprinting SDP " )
-            let player = window.gs.me() //contiene turno e colore
-            
-            player = {/*"colore": player.getColor(), "turno": this.turno, */ "id": this.socket.id}
-            socket.emit("offer", {"offer": localConnection.localDescription, "to": id, "player": player})
-            //abbiamo fatto l'offerta, adesso impostiamo un timeout: se non riceviamo risposta entro 60 secondi, 
-            //eliminiamo il peer
-            setTimeout(this.peerTimeOut, 60*1000, id)
-        }
+        localConnection.on('connection', function(conn){
+            localConnection.conn = conn
+            console.log("Incoming connection..")
+                conn.on('data', function(data){
+                    Communication.receivedMessage(data)
+                })
+                conn.on('open', function(){
+            console.log("Connected!")
+                if (window.gs.turn == 0){
+                    wait_players_modal(window.comm.peerconnections.length + 1)
+                }
 
-        const sendChannel = localConnection.createDataChannel("sendChannel");
-        sendChannel.onmessage = e =>  {
-            Communication.receivedMessage(e.data)
-        }
-        sendChannel.onopen    = e => {
-            console.log("open!!!!");
-
-            if (window.gs.turn == 0){
-                wait_players_modal(this.peerconnections.length + 1)
-            }
-
-            let len = this.peerconnections.length
-                // this.peerconnections[len - 1].turno = len + 1
-
-            // this.peerconnections[len-1].turno = len + 1 //turno di quello che è appena entrato nel canale
-            // var player = new Player(player_data.turno, "", window.gs.me().tanks, true)
-            //var player = new Player(len+1, "", window.gs.me().tanks, true)
-            //window.gs.addPlayer(player)
-
-            // if (this.peerconnections.length + 1 == players_in_lobby){
-            //     window.gs.me().start_playing();
-            // }
-            let openChannels = 0
-            for (let peer in this.peerconnections){
-                // allChannelsOpen = allChannelsOpen && this.peerconnections[peer].channel && this.peerconnections[peer].channel.readyState == "open"
-                // if (!allChannelsOpen)
-                //     break
-                if (this.peerconnections[peer].channel && this.peerconnections[peer].channel.readyState == "open")
-                    openChannels += 1
-                else 
-                    break;
-            }
-            // if (allChannelsOpen){
-            if (openChannels == this.players_in_lobby - 1){
-                let lobby = JSON.parse(localStorage.getItem(lobby_name))
-                if (lobby.ps)
-                    lobby.ps.turno = this.turno
-                else 
-                    lobby.ps = {"turno": this.turno}
-                console.log("Comm: setto ps in localStorage")
-                console.log(lobby.ps)
-                localStorage.setItem(lobby_name, JSON.stringify(lobby))
-                console.log("Makeoffer: l'ultimo canale si è aperto, invio il mio turno al mondo!")
-                this.sendMessage({"command": "announce_turn", "turno": this.turno, "id": this.socket.id})
-            }
-        }
-        sendChannel.onclose =e => {
-            console.log("closed!!!!!!")
-            this.handleCloseConnection(this.peerconnections.find( p => p.channel.readyState == "closed").remotePeer)
-        };
-
-        localConnection.channel = sendChannel
-
-        localConnection.createOffer().then(o => {
-            localConnection.setLocalDescription(o).then( o => {
-                this.peerconnections.push(localConnection)
+                let openChannels = 0
+                for (let peer in window.comm.peerconnections){
+                    if (window.comm.peerconnections[peer].conn && window.comm.peerconnections[peer].conn.open)
+                        openChannels += 1
+                    else 
+                        break;
+                }
+                console.log("I canali aperti sono " + openChannels)
+                if (openChannels == players_in_lobby - 1){
+                    let lobby = JSON.parse(localStorage.getItem(lobby_name))
+                    if (lobby.ps)
+                        lobby.ps.turno = window.comm.turno
+                    else 
+                        lobby.ps = {"turno": window.comm.turno}
+                    console.log("Comm: setto ps in localStorage")
+                    console.log(lobby.ps)
+                    localStorage.setItem(lobby_name, JSON.stringify(lobby))
+                    console.log("Makeoffer: l'ultimo canale si è aperto, invio il mio turno al mondo!")
+                    window.comm.sendMessage({"command": "announce_turn", "turno": window.comm.turno, "id": socket.id})
+                }
             })
-            
-        })        
+            conn.on('close', function(){
+                //TODO forse serve peer.on('disconnected', function() { ... });
+                //oppure 'close'eventpeer.on('close', function() { ... }); 
+                //inoltre la documentazione dice che conn.on('close') non è supportato in firefox
+                window.comm.handleCloseConnection(window.comm.peerconnections.find( p => p.conn.open == false).conn.peer)
+            })
+
+        })
+        
+        
+    }
+
+    connection_offer(peer_socket_id){ 
+	console.log("Procedura di connessione iniziata!")
+        let remoteConnection = new Peer({host: "arianna.cs.unibo.it", port: 9000, config: {iceServers: [{
+            urls: ['turn:arianna.cs.unibo.it:3478'],
+            username: 'simone',
+            credential: 'KXGmwR52QNE'
+        }, {
+          urls: ['stun:arianna.cs.unibo.it'],
+          username: 'simone',
+          credential: 'KXGmwR52QNE'}]}});
+        
+        let id = peer_socket_id.peerid
+        remoteConnection.socketid = peer_socket_id.from
+
+        this.peerconnections.push(remoteConnection)
+
+        remoteConnection.on('open', function(peerid) {
+            console.log('My peer ID is: ' + peerid);
+
+	        console.log("Provo a collegarmi al peer " + id)
+
+            var conn = remoteConnection.connect(id);
+
+            remoteConnection.conn = conn
+
+            conn.on('data', function(data){
+                Communication.receivedMessage(data)
+            })
+            conn.on('open', function(){ 
+	        console.log("Siamo collegati!")
+                let ps = JSON.parse(localStorage.getItem(lobby_name)).ps
+                if (!ps){
+                    console.log("Comm: prima volta in questa lobby")
+                    window.comm.turno += 1
+                } else {
+                    console.log("Comm: Hey, sono già stato qua!")
+                    window.comm.turno = ps.turno
+                    window.gs.me().turno = window.comm.turno
+                    window.gs.me().color = ps.color
+                    window.gs.me().ps.setObjective(ps.obj)
+                    window.gs.me().ps.cards = ps.cards
+                    window.gs.me().ready = true
+                    window.gs.me().tanks = 0
+                }
+                window.gs.me().turno = window.comm.turno
+
+                if (window.gs.turn == 0){
+                    wait_players_modal(window.comm.peerconnections.length + 1)
+                }
+
+
+                let openChannels = 0
+                for (let peer in window.comm.peerconnections){
+                    if (window.comm.peerconnections[peer].conn && window.comm.peerconnections[peer].conn.open)
+                        openChannels += 1
+                    else 
+                        break;
+                }
+
+                if (openChannels == players_in_lobby - 1 || (ps && ps.obj)){
+                    window.comm.sendMessage({"command": "announce_turn", "turno": window.comm.turno, "id": socket.id})
+
+                    if (ps){
+                        //mi sono ricollegato con tutti i giocatori dopo una disconnessione,
+                        //annuncio chi ero e chiedo loro di mandarmi lo stato attuale
+                        let color = ps.color
+                        console.log("Ero già collegato in precedenza, faccio una richiesta per lo stato globale")
+                        window.comm.sendMessage({"command": "status_report", "color": color, "turno": ps.turno})
+                    } else {
+                        ps = {"turno": 0}
+                        ps.turno = window.comm.turno
+                        let lobby = JSON.parse(localStorage.getItem(lobby_name))
+                                lobby.ps = ps
+                                console.log("Comm: setto ps in localStorage")
+                                console.log(lobby.ps)
+                                localStorage.setItem(lobby_name, JSON.stringify(lobby))
+                                console.log("Makeoffer: l'ultimo canale si è aperto, invio il mio turno al mondo!")
+                    }
+                }
+            })
+            conn.on('close', function(){
+                //TODO forse serve peer.on('disconnected', function() { ... });
+                //oppure 'close'eventpeer.on('close', function() { ... }); 
+                //inoltre la documentazione dice che conn.on('close') non è supportato in firefox
+                window.comm.handleCloseConnection(window.comm.peerconnections.find( p => p.conn.open == false).conn.peer)
+            })
+
+	});
+        
     }
 
     peerTimeOut(id){
-        let peerIndex = window.comm.peerconnections.findIndex( p => p.remotePeer == id)
+        let peerIndex = window.comm.peerconnections.findIndex( p => p.conn.peer == id)
         let queueIndex = window.comm.queue.findIndex( p => p == id)
-        if (peerIndex >= 0 && window.comm.peerconnections[peerIndex].channel && window.comm.peerconnections[peerIndex].channel.readyState != "open"){
+        if (peerIndex >= 0 && window.comm.peerconnections[peerIndex].conn && window.comm.peerconnections[peerIndex].conn.open == false){
             window.comm.peerconnections.splice(peerIndex, 1)
             if (window.gs.turn == 0){
                 window.gs.end_game("Timeout utente")
@@ -186,146 +250,13 @@ class Communication{
 
     remake_offer(id){
         console.log("Eliminamo la connessione col canale chiuso")
-        let badpeerindex = this.peerconnections.findIndex( p => p.channel.readyState != "open")
+        let badpeerindex = this.peerconnections.findIndex( p => p.conn.open == false)
         console.log("La connessione è la numero " + badpeerindex)
         console.log("Adesso ho " + this.peerconnections.length + " connessioni")
         this.peerconnections.splice(badpeerindex, 1)
         console.log("Dopo la cancellazione, ho " + this.peerconnections.length + " connessioni")
 
-        
         this.make_offer(id)
-    }
-
-    session_desc(offer_id){
-        console.log("Ricezione offerta: controlliamo se l'utente " + offer_id["id"] + " è già presente")
-        data = offer_id["data"]
-        let newpeer = true;
-        this.peerconnections.forEach(peer => {
-            console.log("ricezione offerta: Mi sto collegando/sono collegato a " + peer.remotePeer)
-            if (peer.remotePeer == offer_id["id"]){
-                console.log("ricezione offerta: il peer non è nuovo")
-                newpeer = false
-            }
-        })
-        
-        if (!newpeer){
-            console.log(`Ho ricevuto un'offerta da un utente a cui sono già collegato (${offer_id["id"]}), la ignoro`)
-            return
-        }
-
-        console.log(`Ho ricevuto un'offerta da ${offer_id["id"]}, creo una connessione con la sua offerta e gli mando una risposta`)
-
-        const remoteConnection = new RTCPeerConnection()
-
-        remoteConnection.remotePeer = offer_id["id"]
-        let player_data = offer_id["player"]
-        remoteConnection.turno = null //player_data.turno  //valore placeholder
-        //global state e communicator devono sapere entrambi qual è il turno di ogni giocatore
-        //per identificarli sia dal colore (gs) sia dal socket (comm)
-
-        /*remoteConnection.onicecandidate = e =>  {
-            console.log(" NEW ice candidnat!! on localconnection reprinting SDP " )
-        }*/
-
-        remoteConnection.ondatachannel= (e) => {
-            const receiveChannel = e.channel;
-            receiveChannel.onmessage = e =>  {
-                Communication.receivedMessage(e.data)
-            }
-            receiveChannel.onopen = (e) => {
-
-                //Nota: questo valore va settato appena tutti i giocatori sono entrati nella lobby
-                let ps = JSON.parse(localStorage.getItem(lobby_name)).ps
-                if (!ps){
-                    console.log("Comm: prima volta in questa lobby")
-                    this.turno += 1
-                } else {
-                    console.log("Comm: Hey, sono già stato qua!")
-                    this.turno = ps.turno
-                    window.gs.me().turno = this.turno
-                    window.gs.me().color = ps.color
-                    window.gs.me().ps.setObjective(ps.obj)
-                    window.gs.me().ps.cards = ps.cards
-                    window.gs.me().ready = true
-                    window.gs.me().tanks = 0
-                }
-                window.gs.me().turno = this.turno
-
-                console.log("open!!!! Cleaning up...");
-                console.log(e)
-
-                let i = 0;
-                while (true){
-                    if (this.peerconnections[i].remotePeer == offer_id["id"] && this.peerconnections[i].channel == null){
-                    // || (this.peerconnections[i].channel && this.peerconnections[i].channel.readyState != "open")){
-                        this.peerconnections.splice(i, 1)
-                    } else {
-                        i++
-                    }
-
-                    if (i == this.peerconnections.length)
-                        break
-                }
-
-                if (window.gs.turn == 0){
-                    wait_players_modal(this.peerconnections.length + 1)
-                }
-                
-                // var player = new Player(remoteConnection.turno, "", window.gs.me().tanks, true)
-                // window.gs.addPlayer(player)
-                
-                let openChannels = 0
-                for (let peer in this.peerconnections){
-                    // allChannelsOpen = allChannelsOpen && this.peerconnections[peer].channel && this.peerconnections[peer].channel.readyState == "open"
-                    // if (!allChannelsOpen)
-                    //     break
-                    if (this.peerconnections[peer].channel && this.peerconnections[peer].channel.readyState == "open")
-                        openChannels += 1
-                    else 
-                        break;
-                }
-                if (/*allChannelsOpen*/ openChannels == this.players_in_lobby - 1 || (ps && ps.obj)){
-                    this.sendMessage({"command": "announce_turn", "turno": this.turno, "id": this.socket.id})
-                    
-                    if (ps){
-                        //mi sono ricollegato con tutti i giocatori dopo una disconnessione,
-                        //annuncio chi ero e chiedo loro di mandarmi lo stato attuale
-                        let color = ps.color
-                        console.log("Ero già collegato in precedenza, faccio una richiesta per lo stato globale")
-                        this.sendMessage({"command": "status_report", "color": color, "turno": ps.turno})
-                    } else { 
-                        ps = {"turno": 0}
-                        ps.turno = this.turno
-                        let lobby = JSON.parse(localStorage.getItem(lobby_name))
-                        lobby.ps = ps
-                        console.log("Comm: setto ps in localStorage")
-                        console.log(lobby.ps)
-                        localStorage.setItem(lobby_name, JSON.stringify(lobby))
-                        console.log("Makeoffer: l'ultimo canale si è aperto, invio il mio turno al mondo!")
-                    }
-                }
-            
-            }
-            receiveChannel.onclose =e => {
-                console.log("closed!!!!!!")
-                this.handleCloseConnection(this.peerconnections.find( p => p.channel.readyState == "closed").remotePeer)
-            };
-            remoteConnection.channel = receiveChannel;
-
-        }
-
-        remoteConnection.setRemoteDescription(data).then(async () => {
-
-            await remoteConnection.createAnswer().then( a => 
-                remoteConnection.setLocalDescription(a)).then( a => {
-                    this.peerconnections.push(remoteConnection)
-                    
-                    var player = null//  { /* "colore": window.gs.me().colore, */ "turno": socket.id} TODO sta roba non serve
-                    // var player = { /* "colore": window.gs.me().colore, */ "turno": this.turno}
-                    socket.emit("answer", {"answer": remoteConnection.localDescription, "to": offer_id["id"], "player": player})
-                    // setTimeout(this.peerTimeOut, 60*1000, offer_id["id"])
-            })
-        })
     }
 
     handleCloseConnection(id){
@@ -347,15 +278,18 @@ class Communication{
 
         if (window.gs.turn != 0){
             console.log("Non è il turno 0, quindi possiamo continuare a giocare")
-            let peerIndex = this.peerconnections.findIndex( p => p.remotePeer == id)
+            let peerIndex = this.peerconnections.findIndex( p => p.conn.peer == id)
             console.log("Il giocatore disconnesso per me era (indice in peerconnections) " + peerIndex)
-            if (peerIndex >= 0 && this.peerconnections[peerIndex].channel.readyState == "closed"){
+            if (peerIndex >= 0 && !this.peerconnections[peerIndex].conn.open){
 
                 let lostPlayer = this.peerconnections[peerIndex].turno
                 console.log("Era il giocatore di turno " + lostPlayer)
-                window.gs.players.find(p => p.turno == lostPlayer).missing = true
+                let pl = window.gs.players.find(p => p.turno == lostPlayer)
+                pl.missing = true
+                pl.tanks = 0
+                pl.combo_tanks = 0
 
-                let badpeerindex = this.peerconnections.findIndex( p => p.channel.readyState != "open")
+                let badpeerindex = this.peerconnections.findIndex( p => p.conn.open == false)
                 this.peerconnections.splice(badpeerindex, 1)
 
                 //contiamo i peer effettivamente rimasti:
@@ -433,7 +367,14 @@ class Communication{
 
                 } else {
                     console.log("Il giocatore disconnesso non stava giocando, non bisogna modificare i turni")
+                    //controlliamo se il giocatore disconnesso doveva tirare i dadi per la difesa da un attacco
+                    if (window.gs.me().attacking){
+                        if (pl.countries[window.attacked_nation] > 0){
+                            //il giocatore disconnesso era sotto attacco
+                            window.comm.sendMessage({"command": "attack", "values": window.gs.attack_dices, "attacking": window.attacking_nation, "attacked": window.attacked_nation, "from": window.gs.me().turno})
 
+                        }
+                    }
                 }
                 
             }
@@ -445,30 +386,4 @@ class Communication{
        
     }
 
-    reply(answer_id){
-        data = answer_id["data"]
-        this.peerconnections.forEach(conn => {
-            if (conn.remoteDescription == null && answer_id["id"] == conn.remotePeer){
-                
-                conn.setRemoteDescription(data);
-                console.log("Pronto per comunicare")
-            
-                this.queue.splice(0, 1)
-            
-                if (this.queue.length > 0){
-                    console.log("Coda: Ho un utente in coda (" + this.queue[0] + "), gli mando un'offerta")
-                    this.make_offer(this.queue[0])
-                } else {
-                    console.log("Coda: Non ho nessun utente in coda")
-                }
-            
-                /*var player_data = answer_id["player"] //TODO sta roba non serve perché viene gestito quando apro il canale di comm.
-                if (player_data){
-                    //questo è un vecchio giocatore che prova a ricollegarsi
-                    conn.turno = player_data.turno
-                }*/
-                
-            }
-        });
-    }
 }
