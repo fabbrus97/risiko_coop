@@ -30,12 +30,6 @@ function update_table(data){
     
 }
 
-/* fetch("http://localhost:3000/lobby")
-.then(response => response.json())
-  .then(data => {
-    update_table(data)
-}); */
-
 var socket = io();
 socket.on("lobbylist", function(msg){
     update_table(msg)

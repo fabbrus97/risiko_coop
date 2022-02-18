@@ -1,10 +1,6 @@
 
 const socket = io()
 
-// const configuration = {
-//     "iceServers": [{"urls": "stun:stun.l.google.com:19302"}]
-// }
-
 
 var pars = new URLSearchParams(document.location.search)
 var lobby_name = pars.get("name")

@@ -1,9 +1,4 @@
 #nations {
-    /* position: absolute; */
-    /* top: 0px; */
-    /* width: 1800px;
-    height: 1300px;  */
-
     width: 96%;
     min-height: 1300px; 
 
@@ -16,9 +11,6 @@
 
 .nation {
     position: absolute;
-    /* width: 125px; 
-    height: 85px; 
-    line-height: 85px; */
     width: 7%; 
     height: 5%; 
     
@@ -40,15 +32,6 @@
     /* display: none; */
 }
 
-/*#groenlandia {
-    width: 250px;
-    height: 170px;
-}
-
-#cina {
-    width: 220px;
-    height: 140px;
-}*/
 
 .plus img, .minus img, .tank_img img {
     /* vertical-align: middle; */

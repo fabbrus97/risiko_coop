@@ -115,12 +115,10 @@ function start_putting_tanks(nations){
         }
     })
 
-    //alert("Puoi cominciare a disporre le armate!!!!")
 }
 
 function add_tank(element){
 
-    // if (window.gs.me().getTanks() == 0){
     if ($(element).attr('class') == "disabled"){
         return;
     }
@@ -538,11 +536,6 @@ function askUserCombo(){
             $(_cards[c]).off('click');
 
             $(_cards[c]).click( e => { 
-                // let element = $(e.target) 
-                // if (element.css("border") != "0px")
-                //     element.css("border", "0px")
-                // else
-                //     element.css("border", "solid")
                 card_action(e.target)
             })
         }
@@ -681,7 +674,6 @@ function deselectCountryMovePhase(country_name){
 
         console.log("Lo stato to è " + window.move_to)
 
-        //TODO
         $($(`#${window.move_from}`).siblings()[1]).text(window.original_tanks_from)
         window.gs.me().countries[window.move_from] = window.original_tanks_from
         if (window.move_to){

@@ -2,9 +2,7 @@
 var express = require('express');
 var app = express();
 const bodyParser = require('body-parser');
-//const { Socket } = require("socket.io");
 const http = require('http');
-const { dirname } = require('path');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
@@ -52,9 +50,6 @@ io.on('connection', (socket) => {
     console.log(`User ${socket.id} disconnecting`)
 
     try {
-      console.log("Le rooms dell'utente erano")
-      console.log(socket.rooms)
-    
       socket.rooms.forEach(function(room){
         
         lobby = lobbylist.find( l => l.name == room)
@@ -122,7 +117,6 @@ io.on('connection', (socket) => {
     let name = details["name"]
     let password = details["password"]
 
-    // console.log(`Cheking lobby pwd ${password_timestamp[name]["password"]} with user pwd ${password}: ${password_timestamp[name]["password"] == password}`)
     if (password_timestamp[name] != null && password_timestamp[name]["password"] == password){
       socket.join(name);
       io.sockets.in(name).emit("user_joined", socket.id);
@@ -131,10 +125,6 @@ io.on('connection', (socket) => {
 
   socket.on("peerid", (data) => {
     console.log("peerid: invio " + data.peerid + " a " + data.to)
-    // socket.rooms.forEach(room => {
-    //   const r = {"data": data, "id": socket.id}
-    //   io.sockets.in(room).emit("session_desc", r);
-    // })
     const r = {"peerid": data["peerid"], "from": socket.id} 
     io.to(data["to"]).emit("connection_offer", r)
   })
@@ -142,18 +132,6 @@ io.on('connection', (socket) => {
 });
 
 /** express server code **/
-
-app.get("/", function(req, res){
-  console.log("Richiesta per la index")
-  let theDate = new Date("2/11/2022 21:00:00")
-  let now = Date.now();
-
-  if (now < theDate){
-    res.sendFile(__dirname + "/static/html/countdown.html")
-    return;
-  } else 
-    res.sendFile(__dirname + "/static/index.html")
-})
 
 app.get('/newlobby', function(req, res){
   console.log(req.params)

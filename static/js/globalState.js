@@ -186,8 +186,6 @@ class Player {
     
     start_playing(_cards){
         
-        console.log("DEBUG inizio a giocare")
-
         //tutti hanno pescato un obiettivo, è di nuovo il mio turno
         // si può cominciare a distribuire i territori
         console.log("Il mio obiettivo è ")
@@ -217,7 +215,6 @@ class Player {
             this.ps.setObjective(c)
             console.log("Ho pescato e settato l'obiettivo")
             console.log(c)
-            // draw_interface() //non posso disegnare l'obiettivo prima di scegliere il colore
             
         } else {
             console.log("GIOCATORE > 1 sto per pescare obiettivo")
@@ -227,8 +224,6 @@ class Player {
             console.log("Ho pescato e settato l'obiettivo")
             console.log(c)
             available_cards_obj = _cards
-            // console.log("Carte rimanenti: ")
-            // console.log(available_cards_obj)
             
         }
 
@@ -246,14 +241,11 @@ class Player {
     draw_card(_cards){
         let draw_id = parseInt(Math.random()*100%_cards.length)
         let card = _cards[draw_id]
-        console.log("Lunghezza delle carte: " + cards.countries.length)
         _cards.splice(draw_id, 1)
-        console.log("Ho eliminato una carta; lunghezza delle carte: " + cards.countries.length)
         return card;
     }
     
     set_countries(_cards){
-        console.log("DEBUG Ho pescato una carta, sono il giocatore " + this.turno)
         let card = this.draw_card(_cards)
         while (card.nome == "bonus" && _cards.length > 0)
             card = this.draw_card(_cards)
@@ -268,9 +260,7 @@ class Player {
             message = {"command": "draw_country", "cards": _cards, "turno": this.turno}
             
         } else {
-            console.log("DEBUG carte finite, disporre le truppe")
             message = {"command": "start_putting_tanks"}
-            // window.comm.sendMessage(message)
             start_putting_tanks(Object.keys(this.countries));
             $("#unclosableModal").modal("hide")
         }
@@ -497,7 +487,6 @@ class Player {
         let win = false;
         if (this.ps.getObjective().kill){
             //devo uccidere qualcuno...
-            // let enemy = this.ps.getObjective().kill;
             let enemy = window.gs.players.find(p => p.color == this.ps.getObjective().kill && p.color != this.color)
             //se il nemico esiste vinco se non ha più territori
             if (enemy){
@@ -621,7 +610,6 @@ class GlobalState{
         }
 
         if (move_country_from){
-            console.log("CONTROLLO CHEATER: ((player.countries[move_country_from] - newState.tanks[move_country_from]) == (newState.tanks[move_country_to] - player.countries[move_country_to])):")
             console.log(player.countries[move_country_from] + " - " + newState.tanks[move_country_from] + " == " + newState.tanks[move_country_to] + " - " + player.countries[move_country_to])    
             return ((player.countries[move_country_from] - newState.tanks[move_country_from]) == (newState.tanks[move_country_to] - player.countries[move_country_to]))
         }
@@ -637,10 +625,6 @@ class GlobalState{
             if (window.gs.me().ps.getObjective() == card)
                 return false; //l'avversario bara, ha il mio stesso obiettivo
         } else {
-            console.log("Le carte che devo controllare sono:")
-            console.log(card)
-            console.log("Le MIE carte sono:")
-            console.log(window.gs.me().ps.cards)
 
             //In questo caso "card" è in realtà una lista di carte
             for (let i in card){
@@ -665,8 +649,6 @@ class GlobalState{
         //nota: i carri che ha effettivamente un giocatore sono quelli dati dai territori/3
         // + eventualmente bonus continenti
         // + eventuali carri disponibili - variabile che viene inizializzata se il giocatore usa una combo
-        console.log("I territori del giocatore sono:")
-        console.log(player.countries)
         let available_tanks = parseInt(Object.keys(player.countries).length/3) + player.checkContinents() + player.combo_tanks
         console.log("I carri che il giocatore ha a disposizione sono " + available_tanks)
         player.combo_tanks = 0
@@ -848,7 +830,6 @@ class GlobalState{
                     
             if (!unknown_player && this.me().ready){
                 if (this.turn == 0 && this.me().turno != 1){
-                    console.log("Imposto il turno a 1!!! perché siamo nel turno globale 0 e io sono il giocatore " + this.me().turno)
                     //questo serve perché quando il giocatore 1 inizia a giocare non broadcasta il turno, 
                     //ma solo dopo aver giocato
                     this.turn = 1
@@ -900,7 +881,6 @@ class GlobalState{
         }
 
         if (action.command == "combo"){
-            //TODO grafica: mostra messaggio che action.player ha usato una combo
             let combo_tanks = this.me().ps.useCombo(action.combo_cards, action.player)
             if ( combo_tanks > 0 && this.checkCard(action.combo_cards, false)){
                 this.players.find(p => p.turno == action.player).combo_tanks = combo_tanks
@@ -1145,8 +1125,6 @@ class GlobalState{
             }
         })
 
-        console.log("Adesso i giocatori sono: ")
-        this.players.forEach( p => {p.color + ": " + p.turno})
         
         draw_interface()
         $("#unclosableModal").modal("hide")
@@ -1167,13 +1145,6 @@ class GlobalState{
     next(){
         this.me().ready = true; 
 
-        // let missing_players = 0
-        // this.players.forEach(p => {
-        //     if (p.turno < 0)
-        //         missing_players += 1
-        // })
-        // let actual_players = this.players.length - missing_players 
-        
         console.log("GIOCATORE " + this.me().turno + ": passo il turno")
 
 
@@ -1188,9 +1159,7 @@ class GlobalState{
                 unknown_player = true
             }
         })
-        if (unknown_player){
-            console.log("DEBUG non conosco ancora degli stati")
-        }
+       
         if (!unknown_player && this.turn == 0){
             //Nota: normalmente la condizione "turno == 1" per cercare il primo giocatore è sbagliata
             //perché il giocatore 1 potrebbe essersi disconnesso, quindi il vero primo turno potrebbe essere
@@ -1324,7 +1293,6 @@ class GlobalState{
             //sposto tanti carri quanti ne ho usati per l'attacco meno 1 perché "addCountry" aggiunge già un carro
             attackingPlayer.addTanks(defense.attacked, this.attack_dices.length - 1)    
             //inoltre, addCountry toglie un carro dalle armate disponibili, che va bene a inizio turno ma non in questo caso
-            // attackingPlayer.tanks += 1
 
             console.log("Dopo la conquista del territorio, lo stato attaccante ora ha " + attackingPlayer.countries[defense.attacking] + " carri")
             console.log("Dopo la conquista del territorio, lo stato conquistato ora ha " + attackingPlayer.countries[defense.attacked] + " carri")
@@ -1371,7 +1339,6 @@ class GlobalState{
 
         }
 
-        console.log("DEBUG fine difesa: adesso ho da disporre " + this.me().tanks + " armate")
 
         //non devo mandare alcun messaggio a nessuno perché tutti avendo visto
         //le nazioni e i dadi possono calcolare autonomamente l'esito
@@ -1406,14 +1373,11 @@ class PrivateState{
      * @param {string} card 
      */
     removeCard(card){        
-        console.log("Lunghezza delle carte: " + cards.countries.length)
         this.cards.splice(this.cards.findIndex( e => e.nome == card), 1)
-        console.log("Ho eliminato una carta; lunghezza delle carte: " + cards.countries.length)
 
         let data = JSON.parse(localStorage.getItem(lobby_name))
         
         data.ps.cards.splice(data.ps.cards.findIndex( c => c == card))
-        console.log("Ho eliminato una carta; lunghezza delle carte: " + cards.countries.length)
 
         localStorage.setItem(lobby_name, JSON.stringify(data))
     }
@@ -1498,7 +1462,6 @@ class PrivateState{
 
                 window.gs.me().tanks += b
 
-                console.log("C-C-Combo (forse)! Ottieni + " + b + " armate")
 
                 window.comm.sendMessage({"command": "combo", "cards": window.gs.available_cards, "combo_cards": cards2use, "player": window.gs.me().turno})
                 

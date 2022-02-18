@@ -33,7 +33,6 @@ class Communication{
                 p.missing = false
            
             if (window.comm.peerconnections.find( p => (p.conn && !p.conn.open) || !p.turno) || window.gs.players.length == players_in_lobby){
-                console.log("Comm: CI MANCA UN TURNO! o li abbiamo tutti (announce_turn outdated)")
                 return; //ci manca il turno di qualche giocatore oppure abbiamo già tutti i turni
             }
 
@@ -47,23 +46,19 @@ class Communication{
 
             
             if (!window.gs.me().ps.getObjective()){
-                console.log("Comm: ci siamo tutti, possiamo iniziare!")
                 window.gs.me().start_playing();
             } else {
-                console.log("Connessione a giocatori ripristinata, attendo che mi aggiornino e mi chiamino")
             }
             
         
             
         } else {
-            console.log("Non so che roba sia, lo passo a gs")
 
             window.gs.action(msg)
         }
     }
 
     sendMessage(msg){
-        console.log("Devo mandare " + this.peerconnections.length + " messaggi")
         for (let i in this.peerconnections){
             var tries = 10000;
             while (this.peerconnections[i].conn && !this.peerconnections[i].conn.open && tries > 0){
@@ -77,14 +72,14 @@ class Communication{
     //devo farlo se un nuovo utente entra nella lobby
     async make_offer(id){
 
-        const localConnection = new Peer({host: "arianna.cs.unibo.it", port: 9000, config: {iceServers: [{
-            urls: ['turn:arianna.cs.unibo.it:3478'],
-            username: 'simone',
-            credential: 'KXGmwR52QNE'
+        const localConnection = new Peer({host: "YOUR_PEERJS_SERVER", port: 9000, config: {iceServers: [{
+            urls: ['turn:YOUR_TURN_SERVER'],
+            username: 'username',
+            credential: 'pwd'
         }, {
-          urls: ['stun:arianna.cs.unibo.it'],
-          username: 'simone',
-          credential: 'KXGmwR52QNE'}]}}); 
+          urls: ['stun:YOUR_STUN_SERVER'],
+          username: 'username',
+          credential: 'pwd'}]}}); 
 
         this.peerconnections.push(localConnection)
 
@@ -126,14 +121,10 @@ class Communication{
                     console.log("Comm: setto ps in localStorage")
                     console.log(lobby.ps)
                     localStorage.setItem(lobby_name, JSON.stringify(lobby))
-                    console.log("Makeoffer: l'ultimo canale si è aperto, invio il mio turno al mondo!")
                     window.comm.sendMessage({"command": "announce_turn", "turno": window.comm.turno, "id": socket.id})
                 }
             })
             conn.on('close', function(){
-                //TODO forse serve peer.on('disconnected', function() { ... });
-                //oppure 'close'eventpeer.on('close', function() { ... }); 
-                //inoltre la documentazione dice che conn.on('close') non è supportato in firefox
                 window.comm.handleCloseConnection(window.comm.peerconnections.find( p => p.conn.open == false).conn.peer)
             })
 
@@ -143,15 +134,14 @@ class Communication{
     }
 
     connection_offer(peer_socket_id){ 
-	console.log("Procedura di connessione iniziata!")
-        let remoteConnection = new Peer({host: "arianna.cs.unibo.it", port: 9000, config: {iceServers: [{
-            urls: ['turn:arianna.cs.unibo.it:3478'],
-            username: 'simone',
-            credential: 'KXGmwR52QNE'
+        let remoteConnection = new Peer({host: "YOUR_PEERJS_SERVER", port: 9000, config: {iceServers: [{
+            urls: ['turn:YOUR_TURN_SERVER'],
+            username: 'username',
+            credential: 'password'
         }, {
-          urls: ['stun:arianna.cs.unibo.it'],
-          username: 'simone',
-          credential: 'KXGmwR52QNE'}]}});
+          urls: ['stun:YOUR_STUN_SERVER'],
+          username: 'username',
+          credential: 'password'}]}});
         
         let id = peer_socket_id.peerid
         remoteConnection.socketid = peer_socket_id.from
@@ -171,13 +161,10 @@ class Communication{
                 Communication.receivedMessage(data)
             })
             conn.on('open', function(){ 
-	        console.log("Siamo collegati!")
                 let ps = JSON.parse(localStorage.getItem(lobby_name)).ps
                 if (!ps){
-                    console.log("Comm: prima volta in questa lobby")
                     window.comm.turno += 1
                 } else {
-                    console.log("Comm: Hey, sono già stato qua!")
                     window.comm.turno = ps.turno
                     window.gs.me().turno = window.comm.turno
                     window.gs.me().color = ps.color
@@ -218,14 +205,10 @@ class Communication{
                                 console.log("Comm: setto ps in localStorage")
                                 console.log(lobby.ps)
                                 localStorage.setItem(lobby_name, JSON.stringify(lobby))
-                                console.log("Makeoffer: l'ultimo canale si è aperto, invio il mio turno al mondo!")
                     }
                 }
             })
             conn.on('close', function(){
-                //TODO forse serve peer.on('disconnected', function() { ... });
-                //oppure 'close'eventpeer.on('close', function() { ... }); 
-                //inoltre la documentazione dice che conn.on('close') non è supportato in firefox
                 window.comm.handleCloseConnection(window.comm.peerconnections.find( p => p.conn.open == false).conn.peer)
             })
 
@@ -233,29 +216,9 @@ class Communication{
         
     }
 
-    peerTimeOut(id){
-        let peerIndex = window.comm.peerconnections.findIndex( p => p.conn.peer == id)
-        let queueIndex = window.comm.queue.findIndex( p => p == id)
-        if (peerIndex >= 0 && window.comm.peerconnections[peerIndex].conn && window.comm.peerconnections[peerIndex].conn.open == false){
-            window.comm.peerconnections.splice(peerIndex, 1)
-            if (window.gs.turn == 0){
-                window.gs.end_game("Timeout utente")
-            }
-        }
-        if (queueIndex >= 0 ) {
-            window.comm.queue.splice(queueIndex, 1)
-        }
-
-    }
-
     remake_offer(id){
-        console.log("Eliminamo la connessione col canale chiuso")
         let badpeerindex = this.peerconnections.findIndex( p => p.conn.open == false)
-        console.log("La connessione è la numero " + badpeerindex)
-        console.log("Adesso ho " + this.peerconnections.length + " connessioni")
         this.peerconnections.splice(badpeerindex, 1)
-        console.log("Dopo la cancellazione, ho " + this.peerconnections.length + " connessioni")
-
         this.make_offer(id)
     }
 
@@ -268,7 +231,6 @@ class Communication{
             quando il giocatore rientrerà, il giocatore 1 ricomincierà da capo
             (resettando available_cards etc.)
         */
-        //TODO mostra messaggio che qualcuno si è disconesso
         console.log("Un giocatore si è disconnesso! (id: " + id + ") proprio in mezzo al turno di " + window.gs.player_turn)
 
         if (window.gs.turn == 0){
@@ -279,7 +241,6 @@ class Communication{
         if (window.gs.turn != 0){
             console.log("Non è il turno 0, quindi possiamo continuare a giocare")
             let peerIndex = this.peerconnections.findIndex( p => p.conn.peer == id)
-            console.log("Il giocatore disconnesso per me era (indice in peerconnections) " + peerIndex)
             if (peerIndex >= 0 && !this.peerconnections[peerIndex].conn.open){
 
                 let lostPlayer = this.peerconnections[peerIndex].turno
@@ -304,47 +265,9 @@ class Communication{
                     window.gs.end_game("Troppi giocatori disconnessi")
                 }
 
-                // if (this.peerconnections[peerIndex].turno >= lostPlayer){
-                //     this.peerconnections[peerIndex].turno -= 1
-                // }
-
-                /*let me = null
-                window.gs.players.forEach( p => {
-                    if (p.turno == this.turno)
-                        me = p
-                    if (p.turno > lostPlayer){
-                        console.log("Il giocatore " + p.turno + " (" + p.color + ") scende di un turno")
-                        p.turno -= 1
-                    } else if (p.turno == lostPlayer){
-                        console.log("Al giocatore " + p.color + " viene resettato il turno")
-                        p.turno = 0
-                    }
-                })
-                */
                 if (window.gs.player_turn == lostPlayer){
                     //trova il giocatore successivo non missing e inizia il suo turno
-                    /*let actual_players = this.players_in_lobby;
-                    window.gs.players.forEach( p => { if (p.turno == 0){ actual_players -= 1}})
-
-                    if (window.gs.player_turn - 1 == actual_players){
-                        window.gs.player_turn = 1
-                        window.gs.turn += 1
-                            // L'istruzione sopra è in 'case "next":', però next() non viene chiamato in questo caso
-                            // Ci si potrebbe chiedere perché non metterlo in start_turn(): la risposta è che se 1 aumenta il turno
-                            // e perde la connessione, quando 2 comincerà il suo turno, siccome sarà ri-diventato 1, ri-aumenterà
-                            // il turno (che verrebbe aumentato due volte di fila erroneamente)
-                            
-                        if (window.gs.me().turno == 1){
-                            window.gs.me().start_turn()
-                        }
-                    } else if (window.gs.player_turn == me.turno && window.gs.player_turn == lostPlayer ){
-                            window.gs.me().start_turn()
-                    } else if (window.gs.player_turn - lostPlayer >= 1){
-                        window.gs.player_turn -= 1
-                    }
-                    //se invece era un turno precedente (es. sono 3 e si disconnette 2, io divento 2)
-                    //posso continuare a giocare e non devo ri-iniziare il mio turno
-                */
+                    
                     
                     let nextPlayer = (lostPlayer%players_in_lobby) + 1
                     while(window.gs.players.find(p => p.turno == nextPlayer).missing)
@@ -380,9 +303,6 @@ class Communication{
             }
         }
 
-       //caso difficile: un giocatore si disconnette prima di aprire un datachannel perché questo evento non viene triggerato
-       //quando si fa l'offerta di connessione, se non c'è risposta entro un minuto elimina il peer   
-       
        
     }
 
